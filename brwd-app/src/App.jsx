@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, push, onValue, update, get } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { pipeline } from '@huggingface/transformers';
 
 // Firebase configuration
@@ -208,6 +208,27 @@ const App = () => {
     }
   }, [user, isAdmin]); 
 
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if this Google user is an admin
+      const isAdminUser = await checkAdminStatus(user.uid);
+      
+      setIsAdmin(isAdminUser);
+      setUser(user);
+      
+      // Direct to appropriate dashboard
+      setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
+      
+    } catch (error) {
+      console.error(error);
+      setErrorModal('Google Sign-In failed. Please try again.');
+    }
+  };
+
   const updateOrderStatus = async (userId, orderId, newStatus) => {
     const orderRef = ref(database, `orders/${userId}/${orderId}`);
     const isServed = newStatus === 'served';
@@ -222,15 +243,15 @@ const App = () => {
     const productRef = ref(database, `products/${category}/${product.id}`);
     await update(productRef, { soldOut: !product.soldOut });
     setToastMessage(`Status for ${product.name} updated.`);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const updateProductPrice = async (category, productId, newPrice) => {
-
     const productRef = ref(database, `products/${category}/${productId}`);
     const finalPrice = parseFloat(newPrice); 
-    
     await update(productRef, { price: finalPrice }); 
     setToastMessage(`Price for ${productId} updated to ₱${finalPrice}`);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const ErrorModal = () => {
@@ -444,27 +465,33 @@ const App = () => {
   };
 
   const submitApplication = async (data) => {
+    const { setIsSubmitting, ...appData } = data; 
     try {
-      const resumeData = await uploadResume(data.resume, data.name);
+      let resumeData = null;
+      if (appData.resume) {
+          resumeData = await uploadResume(appData.resume);
+      }
       
       const applicationRecord = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        position: data.position,
+        name: appData.name,
+        email: appData.email,
+        phone: appData.phone,
+        position: appData.position,
         resume: resumeData,
         timestamp: Date.now(),
         status: 'new'
       };
-
       const applicationRef = push(ref(database, 'applications'));
       await set(applicationRef, applicationRecord);
-
       setSuccessModal('Application successfully submitted! We will be in touch soon.');
+      return true; 
 
     } catch (error) {
       console.error('Application error:', error);
       setErrorModal('Application submission failed: ' + error.message);
+      throw error; 
+    } finally {
+      if (setIsSubmitting) setIsSubmitting(false);
     }
   };
 
@@ -556,7 +583,7 @@ const App = () => {
     const [userType, setUserType] = useState('user');
 
     const baseClasses = "min-h-screen flex items-center justify-center px-4 transition-all duration-500";
-    const backgroundClasses = 'bg-gradient-to-br from-amber-50 to-orange-100'; 
+    const backgroundClasses = userType === 'user' ? 'bg-gradient-to-br from-amber-50 to-orange-100' : 'bg-[#FDF4E6]'; 
 
     const adminLayoutClasses = userType === 'admin' ? 'md:justify-around gap-8 p-0' : ''; 
 
@@ -570,7 +597,7 @@ const App = () => {
             <img 
               src="/image/Pages/admin.jpg"
               alt="Admin Login Background" 
-              className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl"
+              className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl shadow-2xl"
             />
             <div className="absolute top-10 center text-amber-700 text-4xl font-bold drop-shadow-lg">
                 Hello, Admin.
@@ -638,13 +665,34 @@ const App = () => {
                 </button>
               </div>
             </div>
-
             <button
               onClick={() => handleLogin(email, password, userType === 'admin')}
               className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
             >
               Log In
             </button>
+
+            {userType === 'user' && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleGoogleLogin}
+                  className="w-full py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold flex items-center justify-center gap-3"
+                >
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                  Sign in with Google
+                </button>
+              </>
+            )}
+
           </div>
         </div>
       </div>
@@ -1050,7 +1098,6 @@ const App = () => {
       }
 
       if (isSubmitting) return;
-      
       setIsSubmitting(true);
       
       try {
@@ -1080,7 +1127,6 @@ const App = () => {
               alt="Join our team" 
               className="relative z-10 object-contain max-w-full max-h-[90vh] shadow-2xl rounded-xl"
           />
-          <div className="absolute inset-0 bg-black opacity-20"></div>
         </div>
 
         <div className="w-full md:w-1/2 lg:w-7/12 bg-gradient-to-br from-amber-50 to-orange-100 h-screen overflow-y-auto">
@@ -1168,6 +1214,17 @@ const App = () => {
                             <option key={pos} value={pos}>{pos}</option>
                         ))}
                     </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Upload Resume (PDF only, max 2MB)</label>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => setResume(e.target.files[0])}
+                        required
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-600 hover:file:bg-amber-100"
+                      />
                     </div>
 
                     <button
@@ -1786,16 +1843,18 @@ const App = () => {
                           <p className="text-sm text-gray-600">Phone: {app.phone}</p>
 
                           <div className="pt-3 border-t">
-                            <a 
-                              href={app.resume.resumeUrl} // Resume link is now stored directly in app.resume.resumeUrl
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-blue-600 hover:text-blue-900 underline font-medium block mb-3"
-                            >
-                              View Resume (PDF)
-                            </a>
+                            {app.resume ? (
+                                <a 
+                                  href={app.resume.data}
+                                  download={app.resume.fileName}
+                                  className="text-blue-600 hover:text-blue-900 underline font-medium block mb-3"
+                                >
+                                  View Resume (PDF)
+                                </a>
+                            ) : (
+                                <span className="text-gray-400 italic block mb-3">No resume uploaded</span>
+                            )}
 
-                            {/* Action Buttons */}
                             <div className="flex gap-2">
                                 <button onClick={() => markReviewed(app.id)} disabled={app.status === 'reviewed' || app.status === 'contacted'} className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 disabled:bg-gray-300">
                                     Mark Reviewed
