@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, push, onValue, update, get } from 'firebase/database';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
-// Firebase configuration - Replace with your actual config from Firebase Console
+// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -19,6 +20,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Product data
 const products = {
@@ -53,6 +55,8 @@ const App = () => {
   const [successModal, setSuccessModal] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
   const [orderPlacedModal, setOrderPlacedModal] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Listen for reviews
@@ -220,6 +224,32 @@ const App = () => {
     }
   };
 
+  const uploadResume = async (file, applicantName) => {
+    if (!file) return null;
+
+    if (file.size > 2 * 1024 * 1024) {
+      throw new Error('Resume file must be less than 2MB');
+    }
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = () => {
+        resolve({
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          base64Data: reader.result,
+          uploadDate: Date.now()
+        });
+      };
+      
+      reader.onerror = (error) => reject(error);
+      
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSignup = async (email, password) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -270,6 +300,31 @@ const App = () => {
     setCurrentPage('review');
   };
 
+  const submitApplication = async (data) => {
+    try {
+      const resumeData = await uploadResume(data.resume, data.name);
+      
+      const applicationRecord = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        position: data.position,
+        resume: resumeData,
+        timestamp: Date.now(),
+        status: 'new'
+      };
+
+      const applicationRef = push(ref(database, 'applications'));
+      await set(applicationRef, applicationRecord);
+
+      setSuccessModal('Application successfully submitted! We will be in touch soon.');
+
+    } catch (error) {
+      console.error('Application error:', error);
+      setErrorModal('Application submission failed: ' + error.message);
+    }
+  };
+
   const submitReview = async (orderId, rating, comment) => {
     const order = orders.find(o => o.id === orderId);
     
@@ -318,9 +373,14 @@ const App = () => {
         <div className="relative text-center z-10 p-8 rounded-2xl bg-white bg-opacity-80 shadow-2xl backdrop-blur-sm"> 
           <h2 className="text-6xl font-bold text-amber-700 mb-4">Welcome to BRWD.</h2>
           <p className="text-2xl text-amber-600 mb-8">Your favorite milk tea & fruit tea destination</p>
-          <button onClick={() => setCurrentPage('menu')} className="px-8 py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition shadow-lg">
-            View Menu
-          </button>
+          <div className="flex justify-center gap-6">
+            <button onClick={() => setCurrentPage('menu')} className="px-8 py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition shadow-lg">
+              View Menu
+            </button>
+            <button onClick={() => setCurrentPage('careers')} className="px-8 py-4 border-2 border-amber-500 text-amber-600 text-xl rounded-lg hover:bg-amber-50 transition shadow-lg">
+              Careers
+            </button>
+          </div>
         </div>
       </main>
     </div>
@@ -534,7 +594,10 @@ const App = () => {
           <h3 className="text-2xl font-semibold text-amber-600 mb-6">Coffee</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.coffee.map(product => (
-              <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+              <div 
+                key={product.id} 
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+              >
                 <div className="text-6xl mb-4 text-center">{product.image}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
@@ -562,7 +625,10 @@ const App = () => {
           <h3 className="text-2xl font-semibold text-amber-600 mb-6">Fruit Tea</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.fruittea.map(product => (
-              <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+              <div 
+                key={product.id} 
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+              >
                 <div className="text-6xl mb-4 text-center">{product.image}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
@@ -762,47 +828,363 @@ const App = () => {
     );
   };
 
-  const FeedbackPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <nav className="bg-white shadow-md px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
-          <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
-            ← Back to Menu
-          </button>
-        </div>
-      </nav>
+  const CareersPage = () => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [position, setPosition] = useState('Barista');
+    const [resume, setResume] = useState(null);
+
+    const availableCareers = ['Barista', 'Shift Leader', 'Kitchen Staff', 'Marketing Associate'];
+
+   const handleSubmit = async (e) => {
+      e.preventDefault();
       
-      <main className="max-w-4xl mx-auto px-8 py-12">
-        <h2 className="text-4xl font-bold text-amber-700 mb-8">Customer Feedback</h2>
-        
-        {reviews.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <p className="text-xl text-gray-600">No reviews yet</p>
+      if (!resume) {
+          setErrorModal("Please upload your resume to apply.");
+          return;
+      }
+
+      if (isSubmitting) return;
+      
+      setIsSubmitting(true);
+      
+      try {
+        await submitApplication({ name, email, phone, position, resume });
+
+        setName('');
+        setEmail('');
+        setPhone('');
+        setPosition('Barista');
+        setResume(null);
+
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = '';
+          
+      } catch (error) {
+        console.error('Submit error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-amber-600">BRWD. Careers</h1>
+            <button onClick={() => setCurrentPage('home')} className="text-amber-600 hover:text-amber-700">
+              ← Back to Home
+            </button>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {reviews.map(review => (
-              <div key={review.id} className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="text-xl font-semibold text-gray-800">{review.productName}</h4>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-xl">
-                        {i < review.rating ? '⭐' : '☆'}
-                      </span>
-                    ))}
+        </nav>
+        
+        <main className="max-w-4xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-amber-700 mb-8 text-center">Join Our Team!</h2>
+
+          <div className="bg-white rounded-xl shadow-2xl p-8 mb-10">
+            <h3 className="text-2xl font-bold text-amber-600 mb-4">Available Positions</h3>
+            
+            <div className="space-y-4">
+                {availableCareers.map(pos => (
+                    <div key={pos} className="border-b pb-3">
+                        <h4 className="font-semibold text-lg text-gray-800">{pos}</h4>
+                        <p className="text-sm text-gray-600">
+                            {pos === 'Barista' && 'Prepare and serve hot and cold beverages, maintain inventory, and ensure a clean environment.'}
+                            {pos === 'Shift Leader' && 'Oversee daily operations, manage staff shifts, and handle customer issues. Requires 1+ year experience.'}
+                            {pos === 'Kitchen Staff' && 'Assist in food preparation, maintain kitchen hygiene, and manage stock rotation.'}
+                            {pos === 'Marketing Associate' && 'Develop and execute social media strategies and local marketing campaigns.'}
+                        </p>
+                    </div>
+                ))}
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-2xl p-8 space-y-6">
+            <h3 className="text-2xl font-bold text-amber-600 mb-4">Apply Now</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Applying For</label>
+              <select
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white"
+              >
+                {availableCareers.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Resume (PDF only)</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setResume(e.target.files[0])}
+                required
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-600 hover:file:bg-amber-100"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            </button>
+          </form>
+        </main>
+      </div>
+    );
+  };
+
+  const FeedbackPage = () => {
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [productReviews, setProductReviews] = useState({});
+
+    // Organize reviews by product
+    useEffect(() => {
+      const organized = {};
+      reviews.forEach(review => {
+        if (!organized[review.productId]) {
+          organized[review.productId] = {
+            productName: review.productName,
+            reviews: []
+          };
+        }
+        organized[review.productId].reviews.push(review);
+      });
+      setProductReviews(organized);
+    }, [reviews]);
+
+    const allProducts = [...products.coffee, ...products.fruittea];
+
+    const getAverageRating = (productId) => {
+      const product = productReviews[productId];
+      if (!product || product.reviews.length === 0) return 0;
+      const sum = product.reviews.reduce((acc, review) => acc + review.rating, 0);
+      return (sum / product.reviews.length).toFixed(1);
+    };
+
+    const getReviewCount = (productId) => {
+      return productReviews[productId]?.reviews.length || 0;
+    };
+
+    if (selectedProduct) {
+      const product = allProducts.find(p => p.id === selectedProduct);
+      const reviewData = productReviews[selectedProduct];
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+          <nav className="bg-white shadow-md px-8 py-4">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
+              <button 
+                onClick={() => setSelectedProduct(null)} 
+                className="text-amber-600 hover:text-amber-700"
+              >
+                ← Back to All Products
+              </button>
+            </div>
+          </nav>
+          
+          <main className="max-w-4xl mx-auto px-8 py-12">
+            <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+              <div className="flex items-center gap-6">
+                <div className="text-8xl">{product.image}</div>
+                <div className="flex-1">
+                  <h2 className="text-4xl font-bold text-amber-700 mb-2">{product.name}</h2>
+                  <p className="text-3xl font-bold text-amber-600 mb-3">₱{product.price}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className="text-2xl">
+                          {i < Math.round(parseFloat(getAverageRating(selectedProduct))) ? '⭐' : '☆'}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xl font-semibold text-gray-700">
+                      {getAverageRating(selectedProduct)} ({getReviewCount(selectedProduct)} review{getReviewCount(selectedProduct) !== 1 ? 's' : ''})
+                    </span>
                   </div>
                 </div>
-                <p className="text-gray-700 mb-2">{review.comment}</p>
-                <p className="text-sm text-gray-500">{new Date(review.timestamp).toLocaleDateString()}</p>
               </div>
-            ))}
+            </div>
+
+            <h3 className="text-2xl font-bold text-amber-700 mb-6">Customer Reviews</h3>
+            {reviewData && reviewData.reviews.length > 0 ? (
+              <div className="space-y-6">
+                {reviewData.reviews
+                  .sort((a, b) => b.timestamp - a.timestamp)
+                  .map(review => (
+                    <div key={review.id} className="bg-white rounded-xl shadow-lg p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className="text-xl">
+                              {i < review.rating ? '⭐' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {new Date(review.timestamp).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+                <p className="text-xl text-gray-600">No reviews yet for this product</p>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
+            <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
+              ← Back to Menu
+            </button>
           </div>
-        )}
-      </main>
-    </div>
-  );
+        </nav>
+        
+        <main className="max-w-7xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-amber-700 mb-4">Customer Feedback</h2>
+          <p className="text-gray-600 mb-8">Click on any product to see detailed reviews</p>
+          
+          {/* Coffee Section */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Coffee</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.coffee.map(product => {
+                const reviewCount = getReviewCount(product.id);
+                const avgRating = getAverageRating(product.id);
+                
+                return (
+                  <div 
+                    key={product.id} 
+                    onClick={() => setSelectedProduct(product.id)}
+                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105"
+                  >
+                    <div className="text-6xl mb-4 text-center">{product.image}</div>
+                    <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
+                    <p className="text-2xl font-bold text-amber-600 mb-3">₱{product.price}</p>
+                    
+                    {reviewCount > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className="text-lg">
+                                {i < Math.round(parseFloat(avgRating)) ? '⭐' : '☆'}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700">{avgRating}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{reviewCount} review{reviewCount !== 1 ? 's' : ''}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No reviews yet</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Fruit Tea Section */}
+          <div>
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Fruit Tea</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.fruittea.map(product => {
+                const reviewCount = getReviewCount(product.id);
+                const avgRating = getAverageRating(product.id);
+                
+                return (
+                  <div 
+                    key={product.id} 
+                    onClick={() => setSelectedProduct(product.id)}
+                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105"
+                  >
+                    <div className="text-6xl mb-4 text-center">{product.image}</div>
+                    <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
+                    <p className="text-2xl font-bold text-amber-600 mb-3">₱{product.price}</p>
+                    
+                    {reviewCount > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className="text-lg">
+                                {i < Math.round(parseFloat(avgRating)) ? '⭐' : '☆'}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700">{avgRating}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{reviewCount} review{reviewCount !== 1 ? 's' : ''}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">No reviews yet</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  };
 
   // Page Router
   const renderPage = () => {
@@ -815,6 +1197,7 @@ const App = () => {
       case 'orders': return <OrdersPage />;
       case 'review': return <ReviewPage />;
       case 'feedback': return <FeedbackPage />;
+      case 'careers': return <CareersPage />;
       default: return <HomePage />;
     }
   };
