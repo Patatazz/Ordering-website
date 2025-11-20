@@ -24,13 +24,13 @@ const storage = getStorage(app);
 
 // Product data
 const products = {
-  coffee: [
-    { id: 'co1', name: 'Iced Latte', price: 120, category: 'coffee', image: '☕' },
-    { id: 'co2', name: 'Caramel Macchiato', price: 135, category: 'coffee', image: '☕' },
-    { id: 'co3', name: 'Americano', price: 90, category: 'coffee', image: '☕' },
-    { id: 'co4', name: 'Mocha', price: 130, category: 'coffee', image: '☕' },
-    { id: 'co5', name: 'Cold Brew', price: 110, category: 'coffee', image: '☕' },
-    { id: 'co6', name: 'Cappuccino', price: 125, category: 'coffee', image: '☕' },
+  milktea: [
+    { id: 'mt1', name: 'Classic Milk Tea', price: 110, category: 'milktea', image: '🧋' },
+    { id: 'mt2', name: 'Taro Milk Tea', price: 125, category: 'milktea', image: '🧋' },
+    { id: 'mt3', name: 'Wintermelon Milk Tea', price: 115, category: 'milktea', image: '🧋' },
+    { id: 'mt4', name: 'Hokkaido Milk Tea', price: 130, category: 'milktea', image: '🧋' },
+    { id: 'mt5', name: 'Okinawa Milk Tea', price: 130, category: 'milktea', image: '🧋' },
+    { id: 'mt6', name: 'Chocolate Milk Tea', price: 120, category: 'milktea', image: '🧋' },
   ],
   fruittea: [
     { id: 'ft1', name: 'Lemon Fruit Tea', price: 80, category: 'fruittea', image: '🍋' },
@@ -78,17 +78,23 @@ const App = () => {
   useEffect(() => {
     // Listen for user orders
     if (user) {
-      const ordersRef = ref(database, `orders/${user.uid}`);
+      const ordersRef = ref(database, `orders/${user.uid}`); 
+      
       onValue(ordersRef, (snapshot) => {
         const data = snapshot.val();
+        
         if (data) {
           const ordersList = Object.keys(data).map(key => ({
             id: key,
             ...data[key]
           }));
           setOrders(ordersList);
+        } else {
+          setOrders([]);
         }
       });
+    } else {
+      setOrders([]);
     }
   }, [user]);
 
@@ -365,7 +371,7 @@ const App = () => {
       <main 
             className="relative flex-1 flex flex-col items-center justify-center p-8 bg-contain bg-center bg-no-repeat" 
             style={{ 
-              backgroundImage: 'url(/image/SignupPage.png)', 
+              backgroundImage: 'url(/image/Pages/SignupPage.png)', 
               minHeight: '100vh', 
             }}
       >
@@ -404,7 +410,7 @@ const App = () => {
         {userType === 'admin' && (
           <div className="flex-1 min-h-screen hidden md:flex items-center justify-center relative overflow-hidden p-8 transition-opacity duration-500 opacity-100">
             <img 
-              src="/image/admin.jpg"
+              src="/image/Pages/admin.jpg"
               alt="Admin Login Background" 
               className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl"
             />
@@ -591,9 +597,9 @@ const App = () => {
         <h2 className="text-4xl font-bold text-amber-700 mb-8">Our Menu</h2>
         
         <div className="mb-12">
-          <h3 className="text-2xl font-semibold text-amber-600 mb-6">Coffee</h3>
+          <h3 className="text-2xl font-semibold text-amber-600 mb-6">Milktea</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.coffee.map(product => (
+            {products.milktea.map(product => (
               <div 
                 key={product.id} 
                 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
@@ -994,7 +1000,7 @@ const App = () => {
       setProductReviews(organized);
     }, [reviews]);
 
-    const allProducts = [...products.coffee, ...products.fruittea];
+    const allProducts = [...products.milktea, ...products.fruittea];
 
     const getAverageRating = (productId) => {
       const product = productReviews[productId];
@@ -1100,11 +1106,11 @@ const App = () => {
           <h2 className="text-4xl font-bold text-amber-700 mb-4">Customer Feedback</h2>
           <p className="text-gray-600 mb-8">Click on any product to see detailed reviews</p>
           
-          {/* Coffee Section */}
+   
           <div className="mb-12">
-            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Coffee</h3>
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Milktea</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.coffee.map(product => {
+              {products.milktea.map(product => {
                 const reviewCount = getReviewCount(product.id);
                 const avgRating = getAverageRating(product.id);
                 
