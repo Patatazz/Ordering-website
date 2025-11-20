@@ -58,6 +58,7 @@ const App = () => {
   const [applications, setApplications] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allOrders, setAllOrders] = useState([]);
+  const [dailySales, setDailySales] = useState({});
 
   useEffect(() => {
     // Listen for reviews
@@ -110,34 +111,55 @@ const App = () => {
         
         if (usersOrders) {
           const flattenedOrders = [];
-          
+          const salesSummary = {};
+
           Object.keys(usersOrders).forEach(userId => {
             const userOrderData = usersOrders[userId];
 
             if (userOrderData) {
               Object.keys(userOrderData).forEach(orderId => {
-                flattenedOrders.push({
+                const order = {
                   id: orderId,
                   userId: userId,
                   ...userOrderData[orderId]
-                });
+                };
+                
+                flattenedOrders.push(order);
+                
+                if (order.completed) {
+                  const dateKey = new Date(order.timestamp).toISOString().split('T')[0];
+                  
+                  if (!salesSummary[dateKey]) {
+                    salesSummary[dateKey] = { totalSales: 0, orderCount: 0, orders: [] };
+                  }
+                  
+                  salesSummary[dateKey].totalSales += order.total;
+                  salesSummary[dateKey].orderCount += 1;
+                  salesSummary[dateKey].orders.push(order);
+                }
               });
             }
           });
           setAllOrders(flattenedOrders);
+          setDailySales(salesSummary);
+          
         } else {
           setAllOrders([]);
+          setDailySales({});
         }
       });
+
       return () => {
         unsubscribe();
         setAllOrders([]); 
+        setDailySales({});
       };
       
     } else {
       setAllOrders([]);
+      setDailySales({});
     }
-  }, [user, isAdmin]); // Dependencies remain correct
+  }, [user, isAdmin]);
 
   const updateOrderStatus = async (userId, orderId, newStatus) => {
     const orderRef = ref(database, `orders/${userId}/${orderId}`);
@@ -1252,11 +1274,13 @@ const App = () => {
   };
 
   const AdminOrdersPage = () => {
-    const sortedOrders = [...allOrders].sort((a, b) => {
+    const activeOrders = allOrders.filter(order => !order.completed);
+    const sortedOrders = [...activeOrders].sort((a, b) => {
       const statusOrder = (status) => {
         if (status === 'pending') return 1;
         if (status === 'preparing') return 2;
-        return 3;
+        if (status === 'served') return 3;
+        return 4;
       };
       
       const statusComparison = statusOrder(a.status) - statusOrder(b.status);
@@ -1284,6 +1308,12 @@ const App = () => {
               <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
                 Menu
               </button>
+              <button onClick={() => setCurrentPage('admin_sales')} className="text-red-600 hover:text-red-700 font-bold">
+                Sales Report
+              </button>
+              <button onClick={() => setCurrentPage('admin_careers')} className="text-red-600 hover:text-red-700 font-bold">
+                Careers ({applications.length}) 
+              </button>
               <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
                 Logout
               </button>
@@ -1292,9 +1322,9 @@ const App = () => {
         </nav>
         
         <main className="max-w-6xl mx-auto px-8 py-12">
-          <h2 className="text-4xl font-bold text-red-700 mb-8">Live Customer Orders ({allOrders.filter(o => !o.completed).length} Pending)</h2>
+          <h2 className="text-4xl font-bold text-red-700 mb-8">Live Customer Orders ({activeOrders.length} Active)</h2>
           
-          {allOrders.length === 0 ? ( 
+          {activeOrders.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-12 text-center">
               <p className="text-xl text-gray-600">No active orders found.</p>
             </div>
@@ -1346,6 +1376,204 @@ const App = () => {
     );
   };
 
+  const AdminSalesReportPage = () => {
+    const sortedDailyReports = Object.keys(dailySales)
+      .map(date => ({ date, ...dailySales[date] }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const grandTotalSales = sortedDailyReports.reduce((sum, report) => sum + report.totalSales, 0);
+    const grandTotalOrders = sortedDailyReports.reduce((sum, report) => sum + report.orderCount, 0);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-red-600">Sales Report</h1>
+            <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
+                ← Back to Live Orders
+              </button>
+              <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+        
+        <main className="max-w-6xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-red-700 mb-8">Daily Sales Summary</h2>
+          
+          <div className="bg-red-600 text-white rounded-xl shadow-2xl p-6 mb-10 flex justify-around">
+            <div className="text-center">
+              <p className="text-sm opacity-80">Total Orders Tracked</p>
+              <p className="text-4xl font-extrabold">{grandTotalOrders}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm opacity-80">Grand Total Sales</p>
+              <p className="text-4xl font-extrabold">₱{grandTotalSales.toFixed(2)}</p>
+            </div>
+          </div>
+
+          {sortedDailyReports.length === 0 ? ( 
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <p className="text-xl text-gray-600">No completed sales records found.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sortedDailyReports.map(report => ( 
+                <div key={report.date} className="bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-2xl font-bold text-amber-700 border-b pb-3 mb-4">
+                    Sales for {new Date(report.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </h3>
+                  
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-lg font-semibold text-gray-800">Total Revenue:</p>
+                    <p className="text-3xl font-extrabold text-green-600">₱{report.totalSales.toFixed(2)}</p>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600">{report.orderCount} order{report.orderCount !== 1 ? 's' : ''} completed.</p>
+                  
+                  <details className="mt-4 pt-4 border-t">
+                    <summary className="text-amber-600 cursor-pointer font-medium">View {report.orderCount} Orders</summary>
+                    <ul className="mt-2 text-sm text-gray-700 space-y-1">
+                      {report.orders.map(order => (
+                        <li key={order.id} className="flex justify-between">
+                          <span>Order #{order.id.substring(0, 8)}</span>
+                          <span className="font-semibold">₱{order.total}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  };
+
+  const AdminCareersPage = () => {
+    // 1. Organize Applications by Position
+    const groupedApplications = applications.reduce((acc, app) => {
+      if (!acc[app.position]) {
+        acc[app.position] = [];
+      }
+      acc[app.position].push(app);
+      return acc;
+    }, {});
+    
+    // 2. Sorting: Sort the groups by the number of applicants (most first)
+    const sortedPositions = Object.keys(groupedApplications).sort((a, b) => {
+      return groupedApplications[b].length - groupedApplications[a].length;
+    });
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'new': return 'bg-yellow-500 text-gray-800';
+        case 'reviewed': return 'bg-blue-500 text-white';
+        case 'contacted': return 'bg-green-500 text-white';
+        default: return 'bg-gray-300';
+      }
+    };
+
+    const markReviewed = async (appId) => {
+        const appRef = ref(database, `applications/${appId}`);
+        await update(appRef, { status: 'reviewed' });
+    };
+
+    const markContacted = async (appId) => {
+        const appRef = ref(database, `applications/${appId}`);
+        await update(appRef, { status: 'contacted' });
+    };
+
+    if (!isAdmin) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-red-100">
+          <p className="text-2xl text-red-600">Access Denied: Admin privileges required.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-red-600">BRWD. Applications</h1>
+            <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
+                Orders Dashboard
+              </button>
+              <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+        
+        <main className="max-w-7xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-red-700 mb-8">Job Applications ({applications.length} Total)</h2>
+          
+          {applications.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <p className="text-xl text-gray-600">No applications received yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {sortedPositions.map(position => (
+                <div key={position}>
+                  <h3 className="text-3xl font-bold text-amber-700 mb-6 border-b pb-2">
+                    {position} ({groupedApplications[position].length} Applicants)
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {groupedApplications[position]
+                       .sort((a, b) => b.timestamp - a.timestamp) // Sort by most recent application first
+                       .map(app => (
+                        <div key={app.id} className="bg-white rounded-xl shadow-lg p-6 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(app.status)}`}>
+                              {app.status.toUpperCase()}
+                            </span>
+                            <p className="text-xs text-gray-500">{new Date(app.timestamp).toLocaleDateString()}</p>
+                          </div>
+
+                          <p className="text-lg font-bold text-gray-900">{app.name}</p>
+                          <p className="text-sm text-gray-600">Email: {app.email}</p>
+                          <p className="text-sm text-gray-600">Phone: {app.phone}</p>
+
+                          <div className="pt-3 border-t">
+                            <a 
+                              href={app.resume.resumeUrl} // Resume link is now stored directly in app.resume.resumeUrl
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-600 hover:text-blue-900 underline font-medium block mb-3"
+                            >
+                              View Resume (PDF)
+                            </a>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2">
+                                <button onClick={() => markReviewed(app.id)} disabled={app.status === 'reviewed' || app.status === 'contacted'} className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 disabled:bg-gray-300">
+                                    Mark Reviewed
+                                </button>
+                                <button onClick={() => markContacted(app.id)} disabled={app.status === 'contacted'} className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 disabled:bg-gray-300">
+                                    Contacted
+                                </button>
+                            </div>
+                          </div>
+                        </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  };
+
   // Page Router
   const renderPage = () => {
     switch(currentPage) {
@@ -1359,6 +1587,8 @@ const App = () => {
       case 'feedback': return <FeedbackPage />;
       case 'careers': return <CareersPage />;
       case 'admin_orders': return <AdminOrdersPage />;
+      case 'admin_sales': return <AdminSalesReportPage />;
+      case 'admin_careers': return <AdminCareersPage />;
       default: return <HomePage />;
     }
   };
