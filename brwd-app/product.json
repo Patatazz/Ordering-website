@@ -1,18 +1,20 @@
 {
   "milktea": {
-    "mt1": { "id": "mt1", "name": "Classic Milk Tea", "price": 110, "category": "milktea", "image": "🧋", "soldOut": false },
-    "mt2": { "id": "mt2", "name": "Taro Milk Tea", "price": 125, "category": "milktea", "image": "🧋", "soldOut": false },
-    "mt3": { "id": "mt3", "name": "Wintermelon Milk Tea", "price": 115, "category": "milktea", "image": "🧋", "soldOut": false },
-    "mt4": { "id": "mt4", "name": "Hokkaido Milk Tea", "price": 130, "category": "milktea", "image": "🧋", "soldOut": false },
-    "mt5": { "id": "mt5", "name": "Okinawa Milk Tea", "price": 130, "category": "milktea", "image": "🧋", "soldOut": false },
-    "mt6": { "id": "mt6", "name": "Chocolate Milk Tea", "price": 120, "category": "milktea", "image": "🧋", "soldOut": false }
+    "mt1": { "id": "mt1", "name": "Okinawa Milk Tea", "price": 120, "category": "milktea", "image": "/image/Products/milktea/okinawa.png", "soldOut": false },
+    "mt2": { "id": "mt2", "name": "Taro Milk Tea", "price": 125, "category": "milktea", "image": "/image/Products/milktea/taro.png", "soldOut": false },
+    "mt3": { "id": "mt3", "name": "Dark Choco Milk Tea", "price": 130, "category": "milktea", "image": "/image/Products/milktea/darkchoco.png", "soldOut": false },
+    "mt4": { "id": "mt4", "name": "Matcha Milk Tea", "price": 135, "category": "milktea", "image": "/image/Products/milktea/matcha.png", "soldOut": false },
+    "mt5": { "id": "mt5", "name": "Cookies & Cream", "price": 140, "category": "milktea", "image": "/image/Products/milktea/cc.png", "soldOut": false },
+    "mt6": { "id": "mt6", "name": "Red Velvet Milk Tea", "price": 135, "category": "milktea", "image": "/image/Products/milktea/rv.png", "soldOut": false },
+    "mt7": {"id": "mt7", "name": "Chocolate Milk Tea", "price": 130, "category": "milktea", "image": "/image/Products/milktea/chocolate.png", "soldOut": false}
   },
   "fruittea": {
-    "ft1": { "id": "ft1", "name": "Lemon Fruit Tea", "price": 80, "category": "fruittea", "image": "🍋", "soldOut": false },
-    "ft2": { "id": "ft2", "name": "Passion Fruit Tea", "price": 85, "category": "fruittea", "image": "🍊", "soldOut": false },
-    "ft3": { "id": "ft3", "name": "Strawberry Fruit Tea", "price": 90, "category": "fruittea", "image": "🍓", "soldOut": false },
-    "ft4": { "id": "ft4", "name": "Mango Fruit Tea", "price": 90, "category": "fruittea", "image": "🥭", "soldOut": false },
-    "ft5": { "id": "ft5", "name": "Peach Fruit Tea", "price": 85, "category": "fruittea", "image": "🍑", "soldOut": false },
-    "ft6": { "id": "ft6", "name": "Lychee Fruit Tea", "price": 95, "category": "fruittea", "image": "🍒", "soldOut": false }
+    "ft1": { "id": "ft1", "name": "Mango Fruit Tea", "price": 100, "category": "fruittea", "image": "/image/Products/fruitea/mango.png", "soldOut": false },
+    "ft2": { "id": "ft2", "name": "Kiwi Fruit Tea", "price": 105, "category": "fruittea", "image": "/image/Products/fruitea/kiwi.png", "soldOut": false },
+    "ft3": { "id": "ft3", "name": "Lemon Fruit Tea", "price": 105, "category": "fruittea", "image": "/image/Products/fruitea/lemon.png", "soldOut": false },
+    "ft4": { "id": "ft4", "name": "Lychee Fruit Tea", "price": 110, "category": "fruittea", "image": "/image/Products/fruitea/lychee.png", "soldOut": false },
+    "ft5": { "id": "ft5", "name": "Green Apple Fruit Tea", "price": 110, "category": "fruittea", "image": "/image/Products/fruitea/ga.png", "soldOut": false },
+    "ft6": { "id": "ft6", "name": "Strawberry Fruit Tea", "price": 115, "category": "fruittea", "image": "/image/Products/fruitea/strawberry.png", "soldOut": false },
+    "ft7": { "id": "ft7", "name": "Blueberry Fruit Tea", "price": 115, "category": "fruittea", "image": "/image/Products/fruitea/blueberry.png", "soldOut": false }
   }
 }
