@@ -57,6 +57,7 @@ const App = () => {
   const [orderPlacedModal, setOrderPlacedModal] = useState(false);
   const [applications, setApplications] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allOrders, setAllOrders] = useState([]);
 
   useEffect(() => {
     // Listen for reviews
@@ -98,13 +99,61 @@ const App = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    let unsubscribe = () => {};
+
+    if (user && isAdmin) {
+      const allOrdersRef = ref(database, 'orders'); 
+
+      unsubscribe = onValue(allOrdersRef, (snapshot) => { 
+        const usersOrders = snapshot.val();
+        
+        if (usersOrders) {
+          const flattenedOrders = [];
+          
+          Object.keys(usersOrders).forEach(userId => {
+            const userOrderData = usersOrders[userId];
+
+            if (userOrderData) {
+              Object.keys(userOrderData).forEach(orderId => {
+                flattenedOrders.push({
+                  id: orderId,
+                  userId: userId,
+                  ...userOrderData[orderId]
+                });
+              });
+            }
+          });
+          setAllOrders(flattenedOrders);
+        } else {
+          setAllOrders([]);
+        }
+      });
+      return () => {
+        unsubscribe();
+        setAllOrders([]); 
+      };
+      
+    } else {
+      setAllOrders([]);
+    }
+  }, [user, isAdmin]); // Dependencies remain correct
+
+  const updateOrderStatus = async (userId, orderId, newStatus) => {
+    const orderRef = ref(database, `orders/${userId}/${orderId}`);
+    const isServed = newStatus === 'served';
+
+    await update(orderRef, { 
+        status: newStatus,
+        completed: isServed ? false : false
+    });
+  };
+
   const ErrorModal = () => {
-    if (!errorModal) return null; // Don't render if no error
+    if (!errorModal) return null;
 
     return (
-      // Background overlay to cover the whole screen
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        {/* Modal content box */}
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm transform transition-all">
           <h3 className="text-2xl font-bold text-red-600 mb-4">Error</h3>
           
@@ -125,9 +174,7 @@ const App = () => {
     if (!successModal) return null;
 
     return (
-      // Background overlay 
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        {/* Modal content box */}
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm transform transition-all">
           <h3 className="text-2xl font-bold text-green-600 mb-4">Success!</h3>
           
@@ -223,7 +270,7 @@ const App = () => {
       }
       setIsAdmin(finalIsAdmin);
       setUser(userCredential.user);
-      setCurrentPage('menu');
+      setCurrentPage(finalIsAdmin ? 'admin_orders' : 'menu');
 
     } catch (error) {
       setErrorModal('Login failed: No account found with provided credentials.');
@@ -298,6 +345,12 @@ const App = () => {
   };
 
   const markOrderComplete = async (orderId) => {
+    const orderToComplete = orders.find(o => o.id === orderId);
+    if (orderToComplete.status !== 'served') {
+      setErrorModal(`Cannot complete order. Status must be 'served' first.`);
+      return;
+    }
+    
     const orderRef = ref(database, `orders/${user.uid}/${orderId}`);
     await update(orderRef, { completed: true, status: 'completed' });
     
@@ -568,9 +621,15 @@ const App = () => {
           <div className="flex items-center gap-4">
             {user && (
               <>
-                <button onClick={() => setCurrentPage('orders')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
-                  My Orders
-                </button>
+                {isAdmin ? (
+                   <button onClick={() => setCurrentPage('admin_orders')} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold">
+                     Admin Dashboard
+                   </button>
+                ) : (
+                   <button onClick={() => setCurrentPage('orders')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
+                     My Orders
+                   </button>
+                )}
                 <button onClick={() => setCurrentPage('feedback')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
                   Feedback
                 </button>
@@ -1192,6 +1251,101 @@ const App = () => {
     );
   };
 
+  const AdminOrdersPage = () => {
+    const sortedOrders = [...allOrders].sort((a, b) => {
+      const statusOrder = (status) => {
+        if (status === 'pending') return 1;
+        if (status === 'preparing') return 2;
+        return 3;
+      };
+      
+      const statusComparison = statusOrder(a.status) - statusOrder(b.status);
+      if (statusComparison !== 0) return statusComparison;
+      
+      return b.timestamp - a.timestamp;
+    });
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'pending': return 'bg-red-500 text-white';
+        case 'preparing': return 'bg-yellow-500 text-gray-800';
+        case 'served': return 'bg-blue-500 text-white';
+        case 'completed': return 'bg-green-500 text-white';
+        default: return 'bg-gray-300';
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-red-600">BRWD. Admin Dashboard</h1>
+            <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
+                Menu
+              </button>
+              <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+        
+        <main className="max-w-6xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-red-700 mb-8">Live Customer Orders ({allOrders.filter(o => !o.completed).length} Pending)</h2>
+          
+          {allOrders.length === 0 ? ( 
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <p className="text-xl text-gray-600">No active orders found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedOrders.map(order => ( 
+                <div key={order.id} className="bg-white rounded-xl shadow-lg p-6 border-4 border-transparent hover:border-amber-500 transition">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getStatusColor(order.status)}`}>
+                    {order.status.toUpperCase()}
+                  </span>
+                  
+                  <p className="text-sm font-semibold text-gray-800 mb-1">Customer ID: {order.userId.substring(0, 8)}...</p>
+                  <p className="text-xs text-gray-500 mb-4">Order Time: {new Date(order.timestamp).toLocaleTimeString()}</p>
+
+                  <div className="border-t pt-3 mb-4">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-sm py-1">
+                        <span>{item.name}</span>
+                        <span className="font-medium">₱{item.price}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xl font-bold text-red-600 mb-4">Total: ₱{order.total}</p>
+
+                  {/* Admin Action Buttons */}
+                  <div className="flex justify-between gap-2">
+                    <button
+                      onClick={() => updateOrderStatus(order.userId, order.id, 'preparing')}
+                      disabled={order.status === 'preparing' || order.status === 'served' || order.status === 'completed'}
+                      className="flex-1 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition disabled:bg-gray-300"
+                    >
+                      Preparing
+                    </button>
+                    <button
+                      onClick={() => updateOrderStatus(order.userId, order.id, 'served')}
+                      disabled={order.status === 'served' || order.status === 'completed'}
+                      className="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300"
+                    >
+                      Served
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  };
+
   // Page Router
   const renderPage = () => {
     switch(currentPage) {
@@ -1204,6 +1358,7 @@ const App = () => {
       case 'review': return <ReviewPage />;
       case 'feedback': return <FeedbackPage />;
       case 'careers': return <CareersPage />;
+      case 'admin_orders': return <AdminOrdersPage />;
       default: return <HomePage />;
     }
   };
