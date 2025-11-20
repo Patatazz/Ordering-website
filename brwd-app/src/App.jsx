@@ -64,7 +64,9 @@ const App = () => {
           id: key,
           ...data[key]
         }));
-        setReviews(reviewsList);
+        setReviews(reviewsList); 
+      } else {
+        setReviews([]);
       }
     });
   }, []);
@@ -328,39 +330,23 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [userType, setUserType] = useState('user');
-    
+
     const baseClasses = "min-h-screen flex items-center justify-center px-4 transition-all duration-500";
-    const backgroundClasses = userType === 'user' 
-      ? 'bg-gradient-to-br from-amber-50 to-orange-100' 
-      : '';
+    const backgroundClasses = 'bg-gradient-to-br from-amber-50 to-orange-100'; 
 
-    const bgImagePath = userType === 'admin' ? '/image/admin.jpg' : '/image/SignupPage.png';
-
-    const backgroundStyle = {
-      backgroundImage: `url(${bgImagePath})`,
-      backgroundSize: userType === 'user' ? 'contain' : 'cover', 
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      minHeight: '100vh',
-    };
-
-    const adminLayoutClasses = userType === 'admin' ? 'md:justify-around gap-8 p-0' : 'md:justify-center';
-    const formLayoutClasses = userType === 'admin' ? 'md:flex-shrink-0 md:w-1/2 md:max-w-lg md:px-12 md:py-16' : ''
+    const adminLayoutClasses = userType === 'admin' ? 'md:justify-around gap-8 p-0' : ''; 
 
     return (
       <div 
-       className={`${baseClasses} ${backgroundClasses} ${adminLayoutClasses}`}
+        className={`${baseClasses} ${backgroundClasses} ${adminLayoutClasses}`}
       >
-        {userType === 'user' && (
-             <div className="absolute inset-0 bg-black opacity-30 backdrop-blur-sm"></div>
-        )}
-
+        
         {userType === 'admin' && (
           <div className="flex-1 min-h-screen hidden md:flex items-center justify-center relative overflow-hidden p-8 transition-opacity duration-500 opacity-100">
             <img 
-              src={bgImagePath}
+              src="/image/admin.jpg"
               alt="Admin Login Background" 
-              className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl shadow-2xl"
+              className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl"
             />
             <div className="absolute top-10 center text-amber-700 text-4xl font-bold drop-shadow-lg">
                 Hello, Admin.
@@ -368,8 +354,10 @@ const App = () => {
           </div>
         )}
 
-       <div 
-          className={`bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10 transition-all duration-500 ${formLayoutClasses}`}
+        <div 
+          className={`bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10 transition-all duration-500 
+                      ${userType === 'admin' ? 'md:flex-shrink-0 md:w-1/2 md:max-w-lg md:px-12 md:py-16' : ''}`
+          }
         >
           <button onClick={() => setCurrentPage('home')} className="text-amber-600 mb-4 hover:text-amber-700">
             ← Back to Home
@@ -778,7 +766,7 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <nav className="bg-white shadow-md px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
+          <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
           <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
             ← Back to Menu
           </button>
