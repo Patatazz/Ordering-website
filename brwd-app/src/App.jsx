@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, push, onValue, update, get } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { pipeline } from '@huggingface/transformers';
+// import { pipeline } from '@huggingface/transformers';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -1090,6 +1090,7 @@ const App = () => {
     const availableCareers = ['Barista', 'Shift Leader', 'Kitchen Staff', 'Marketing Associate'];
 
    const handleSubmit = async (e) => {
+      setIsSubmitting(true);
       e.preventDefault();
       
       if (!resume) {
