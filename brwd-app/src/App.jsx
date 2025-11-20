@@ -59,6 +59,7 @@ const App = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allOrders, setAllOrders] = useState([]);
   const [dailySales, setDailySales] = useState({});
+  const [products, setProducts] = useState({ milktea: [], fruittea: [] });
 
   useEffect(() => {
     // Listen for reviews
@@ -99,6 +100,23 @@ const App = () => {
       setOrders([]);
     }
   }, [user]);
+
+  useEffect(() => {
+    const productsRef = ref(database, 'products');
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const processedProducts = {
+          milktea: data.milktea ? Object.keys(data.milktea).map(key => ({ id: key, ...data.milktea[key] })) : [],
+          fruittea: data.fruittea ? Object.keys(data.fruittea).map(key => ({ id: key, ...data.fruittea[key] })) : [],
+        };
+        setProducts(processedProducts);
+      } else {
+        setProducts({ milktea: [], fruittea: [] });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -161,6 +179,34 @@ const App = () => {
     }
   }, [user, isAdmin]);
 
+  useEffect(() => {
+    let unsubscribe = () => {};
+
+    if (user && isAdmin) {
+      const applicationsRef = ref(database, 'applications');
+      unsubscribe = onValue(applicationsRef, (snapshot) => { 
+        const data = snapshot.val();
+        
+        if (data) {
+          const applicationsList = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          }));
+          setApplications(applicationsList); 
+        } else {
+          setApplications([]);
+        }
+      });
+      return () => {
+        unsubscribe();
+        setApplications([]); 
+      };
+      
+    } else {
+      setApplications([]);
+    }
+  }, [user, isAdmin]); 
+
   const updateOrderStatus = async (userId, orderId, newStatus) => {
     const orderRef = ref(database, `orders/${userId}/${orderId}`);
     const isServed = newStatus === 'served';
@@ -169,6 +215,21 @@ const App = () => {
         status: newStatus,
         completed: isServed ? false : false
     });
+  };
+
+  const toggleSoldOut = async (category, product) => {
+    const productRef = ref(database, `products/${category}/${product.id}`);
+    await update(productRef, { soldOut: !product.soldOut });
+    setToastMessage(`Status for ${product.name} updated.`);
+  };
+
+  const updateProductPrice = async (category, productId, newPrice) => {
+
+    const productRef = ref(database, `products/${category}/${productId}`);
+    const finalPrice = parseFloat(newPrice); 
+    
+    await update(productRef, { price: finalPrice }); 
+    setToastMessage(`Price for ${productId} updated to ₱${finalPrice}`);
   };
 
   const ErrorModal = () => {
@@ -292,7 +353,7 @@ const App = () => {
       }
       setIsAdmin(finalIsAdmin);
       setUser(userCredential.user);
-      setCurrentPage(finalIsAdmin ? 'admin_orders' : 'menu');
+      setCurrentPage(finalIsAdmin ? 'admin_menu' : 'menu');
 
     } catch (error) {
       setErrorModal('Login failed: No account found with provided credentials.');
@@ -645,7 +706,7 @@ const App = () => {
               <>
                 {isAdmin ? (
                    <button onClick={() => setCurrentPage('admin_orders')} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold">
-                     Admin Dashboard
+                     Dashboard
                    </button>
                 ) : (
                    <button onClick={() => setCurrentPage('orders')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
@@ -683,25 +744,35 @@ const App = () => {
             {products.milktea.map(product => (
               <div 
                 key={product.id} 
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer relative"
               >
+                {product.soldOut && (
+                    <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">
+                        SOLD OUT
+                    </span>
+                )}
                 <div className="text-6xl mb-4 text-center">{product.image}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
                 <button
                   onClick={() => {
                     if (user) {
+                      if (product.soldOut) {
+                        setErrorModal(`${product.name} is currently sold out.`);
+                        return;
+                      }
                       addToCart(product);
                       setToastMessage(`${product.name} added to your cart!`); 
-                      setTimeout(() => setToastMessage(null), 3000); // Hide after 3 seconds (3000ms)
+                      setTimeout(() => setToastMessage(null), 3000);
                     } else {
-                      setErrorModal('Please log in to order. You must have an account to add items to your cart.');
+                      setErrorModal('Please log in to order.');
                       setCurrentPage('login');
                     }
                   }}
-                  className="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
+                  disabled={product.soldOut}
+                  className="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  {product.soldOut ? 'Sold Out' : 'Add to Cart'}
                 </button>
               </div>
             ))}
@@ -714,25 +785,35 @@ const App = () => {
             {products.fruittea.map(product => (
               <div 
                 key={product.id} 
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer relative"
               >
+                {product.soldOut && (
+                    <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">
+                        SOLD OUT
+                    </span>
+                )}
                 <div className="text-6xl mb-4 text-center">{product.image}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
                 <button
                   onClick={() => {
                     if (user) {
+                      if (product.soldOut) {
+                        setErrorModal(`${product.name} is currently sold out.`);
+                        return;
+                      }
                       addToCart(product);
                       setToastMessage(`${product.name} added to your cart!`); 
-                      setTimeout(() => setToastMessage(null), 3000); // Hide after 3 seconds (3000ms)
+                      setTimeout(() => setToastMessage(null), 3000);
                     } else {
-                      setErrorModal('Please log in to order. You must have an account to add items to your cart.');
+                      setErrorModal('Please log in to order.');
                       setCurrentPage('login');
                     }
                   }}
-                  className="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
+                  disabled={product.soldOut}
+                  className="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  {product.soldOut ? 'Sold Out' : 'Add to Cart'}
                 </button>
               </div>
             ))}
@@ -802,7 +883,7 @@ const App = () => {
   const OrdersPage = () => {
     const sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
 
-    return ( // <-- Explicit return added
+    return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
         <nav className="bg-white shadow-md px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -815,15 +896,13 @@ const App = () => {
         
         <main className="max-w-4xl mx-auto px-8 py-12">
           <h2 className="text-4xl font-bold text-amber-700 mb-8">My Orders</h2>
-          
-          {/* Use the sortedOrders array for the check */}
+
           {sortedOrders.length === 0 ? ( 
             <div className="bg-white rounded-xl shadow-lg p-12 text-center">
               <p className="text-xl text-gray-600">No orders yet</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Map over the sorted array */}
               {sortedOrders.map(order => ( 
                 <div key={order.id} className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -1305,8 +1384,8 @@ const App = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">BRWD. Admin Dashboard</h1>
             <div className="flex gap-4">
-              <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
-                Menu
+              <button onClick={() => setCurrentPage('admin_menu')} className="text-red-600 hover:text-red-700 font-bold">
+                Menu Editor
               </button>
               <button onClick={() => setCurrentPage('admin_sales')} className="text-red-600 hover:text-red-700 font-bold">
                 Sales Report
@@ -1390,6 +1469,9 @@ const App = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">Sales Report</h1>
             <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('admin_menu')} className="text-red-600 hover:text-red-700 font-bold">
+                Menu Editor
+              </button>
               <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
                 ← Back to Live Orders
               </button>
@@ -1454,7 +1536,6 @@ const App = () => {
   };
 
   const AdminCareersPage = () => {
-    // 1. Organize Applications by Position
     const groupedApplications = applications.reduce((acc, app) => {
       if (!acc[app.position]) {
         acc[app.position] = [];
@@ -1463,7 +1544,6 @@ const App = () => {
       return acc;
     }, {});
     
-    // 2. Sorting: Sort the groups by the number of applicants (most first)
     const sortedPositions = Object.keys(groupedApplications).sort((a, b) => {
       return groupedApplications[b].length - groupedApplications[a].length;
     });
@@ -1487,6 +1567,11 @@ const App = () => {
         await update(appRef, { status: 'contacted' });
     };
 
+    const deleteApplication = async (appId) => {
+        const appRef = ref(database, `applications/${appId}`);
+        await set(appRef, null);
+    };
+
     if (!isAdmin) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-red-100">
@@ -1496,11 +1581,14 @@ const App = () => {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
         <nav className="bg-white shadow-md px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">BRWD. Applications</h1>
             <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('admin_menu')} className="text-red-600 hover:text-red-700 font-bold">
+                Menu Editor
+              </button>
               <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
                 Orders Dashboard
               </button>
@@ -1528,7 +1616,7 @@ const App = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {groupedApplications[position]
-                       .sort((a, b) => b.timestamp - a.timestamp) // Sort by most recent application first
+                       .sort((a, b) => b.timestamp - a.timestamp)
                        .map(app => (
                         <div key={app.id} className="bg-white rounded-xl shadow-lg p-6 space-y-3">
                           <div className="flex justify-between items-start">
@@ -1560,6 +1648,12 @@ const App = () => {
                                 <button onClick={() => markContacted(app.id)} disabled={app.status === 'contacted'} className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 disabled:bg-gray-300">
                                     Contacted
                                 </button>
+                                <button 
+                                    onClick={() => deleteApplication(app.id)} 
+                                    className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition"
+                                >
+                                    Reject
+                                </button>
                             </div>
                           </div>
                         </div>
@@ -1569,6 +1663,112 @@ const App = () => {
               ))}
             </div>
           )}
+        </main>
+      </div>
+    );
+  };
+
+  const AdminMenuPage = () => {
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [newPrice, setNewPrice] = useState('');
+
+    const handlePriceChange = (product) => {
+        if (newPrice === '' || isNaN(newPrice) || parseFloat(newPrice) <= 0) {
+            setErrorModal("Please enter a valid price.");
+            return;
+        }
+        updateProductPrice(product.category, product.id, newPrice); 
+        setEditingProduct(null);
+        setNewPrice('');
+    };
+
+    const renderProductEdit = (product) => (
+      <div className="bg-amber-50 rounded-xl shadow-lg p-6 border-2 border-amber-600 space-y-3">
+        <h4 className="text-xl font-bold text-amber-800">{product.name}</h4>
+        <p className="text-sm">Current Price: ₱{product.price}</p>
+        
+        <label className="block text-sm font-medium text-gray-700">New Price (₱)</label>
+        <input
+            type="number"
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg"
+            placeholder="e.g., 145"
+        />
+        <div className="flex gap-2 mt-3">
+            <button onClick={() => handlePriceChange(product)} className="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                Save
+            </button>
+            <button onClick={() => setEditingProduct(null)} className="flex-1 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                Cancel
+            </button>
+        </div>
+      </div>
+    );
+
+    const renderProductCard = (product) => (
+        <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 space-y-3 border-4 border-transparent hover:border-red-500 transition">
+            <div className="text-4xl text-center">{product.image}</div>
+            <h4 className="text-xl font-semibold text-gray-800">{product.name}</h4>
+            <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
+            
+            <div className="flex gap-2 pt-3 border-t">
+                <button
+                    onClick={() => toggleSoldOut(product.category, product)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${product.soldOut ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                >
+                    {product.soldOut ? 'Mark Available' : 'Mark Sold Out'}
+                </button>
+                <button
+                    onClick={() => { setEditingProduct(product); setNewPrice(product.price.toString()); }}
+                    className="flex-1 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
+                >
+                    Edit Price
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-red-600">BRWD. Admin Menu Editor</h1>
+            <div className="flex gap-4">
+              <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
+                Dashboard
+              </button>
+              <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+        
+        <main className="max-w-7xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-red-700 mb-8">Manage Products & Pricing</h2>
+          
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-700 mb-6">Milktea</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.milktea.map(product => (
+                editingProduct && editingProduct.id === product.id ? 
+                renderProductEdit(product) : 
+                renderProductCard(product)
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="text-2xl font-semibold text-amber-700 mb-6">Fruit Tea</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.fruittea.map(product => (
+                editingProduct && editingProduct.id === product.id ? 
+                renderProductEdit(product) : 
+                renderProductCard(product)
+              ))}
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -1589,6 +1789,7 @@ const App = () => {
       case 'admin_orders': return <AdminOrdersPage />;
       case 'admin_sales': return <AdminSalesReportPage />;
       case 'admin_careers': return <AdminCareersPage />;
+      case 'admin_menu': return <AdminMenuPage />;
       default: return <HomePage />;
     }
   };
