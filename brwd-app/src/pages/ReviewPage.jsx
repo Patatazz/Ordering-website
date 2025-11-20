@@ -1,24 +1,57 @@
 import React, { useState } from 'react';
 import { ref, push, set } from 'firebase/database';
-import { pipeline } from '@huggingface/transformers';
 
 const ReviewPage = ({ pendingReview, orders, user, database, setCurrentPage, setSuccessModal, setErrorModal }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
 
-  const submitReview = async (orderId, rating, comment) => {
+  const cleanText = (text) => {
+      let cleaned = text.replace(/(.)\1{2,}/g, '$1$1');
+      
+      cleaned = cleaned.toLowerCase(); 
+      
+      return cleaned;
+  };
+
+  const submitReview = async () => {
+    if (!pendingReview) return;
+
     try {
-        const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
-        const result = await classifier(comment);
-        const rawLabel = result[0].label; 
+        let finalSentiment = 'NEUTRAL';
+        let aiLabel = null;
+        let aiScore = 0;
 
-        let sentiment = 'NEUTRAL';
-        if (rawLabel === 'POSITIVE') sentiment = 'GOOD';
-        if (rawLabel === 'NEGATIVE') sentiment = 'BAD';
+        if (window.pipeline && comment.trim().length > 0) {
+            try {
+                const processedComment = cleanText(comment);
+                const classifier = await window.pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
+                const result = await classifier(processedComment);
+                
+                aiLabel = result[0].label; 
+                aiScore = result[0].score; 
 
-        const order = orders.find(o => o.id === orderId);
-        
-        for (const item of order.items) {
+
+                if (aiLabel === 'POSITIVE') aiLabel = 'GOOD';
+                if (aiLabel === 'NEGATIVE') aiLabel = 'BAD';
+
+            } catch (err) {
+                console.warn("AI analysis failed, using stars only.", err);
+            }
+        }
+
+        if (aiScore > 0.85 && aiLabel) {
+            finalSentiment = aiLabel;
+        } else {
+            if (rating >= 4) {
+                finalSentiment = 'GOOD';
+            } else if (rating <= 2) {
+                finalSentiment = 'BAD';
+            } else {
+                finalSentiment = aiLabel || 'NEUTRAL';
+            }
+        }
+
+        for (const item of pendingReview.items) {
           const reviewRef = push(ref(database, 'reviews'));
           await set(reviewRef, {
             userId: user.uid,
@@ -27,16 +60,17 @@ const ReviewPage = ({ pendingReview, orders, user, database, setCurrentPage, set
             rating: rating,
             comment: comment,
             timestamp: Date.now(),
-            sentiment: sentiment 
+            sentiment: finalSentiment 
           });
         }
         
-        setSuccessModal('Thank you! Your review has been submitted successfully.');
+        setSuccessModal(`Thank you! Review submitted.`);
         setCurrentPage('feedback');
 
     } catch (error) {
-        console.error("AI Error:", error);
+        console.error("Review Error:", error);
         setSuccessModal('Review submitted successfully.');
+        setCurrentPage('feedback');
     }
   };
 
@@ -57,17 +91,27 @@ const ReviewPage = ({ pendingReview, orders, user, database, setCurrentPage, set
             <label className="block text-lg font-semibold text-gray-700 mb-3">Rating</label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map(star => (
-                <button key={star} onClick={() => setRating(star)} className="text-4xl">{star <= rating ? '⭐' : '☆'}</button>
+                <button key={star} onClick={() => setRating(star)} className="text-4xl transition transform hover:scale-110">
+                  {star <= rating ? '⭐' : '☆'}
+                </button>
               ))}
             </div>
           </div>
           
           <div className="mb-6">
             <label className="block text-lg font-semibold text-gray-700 mb-3">Your Feedback</label>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent" rows="5" placeholder="Tell us about your experience..."/>
+            <textarea 
+                value={comment} 
+                onChange={(e) => setComment(e.target.value)} 
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent" 
+                rows="5" 
+                placeholder="Tell us about your experience..."
+            />
           </div>
           
-          <button onClick={() => submitReview(pendingReview.id, rating, comment)} className="w-full py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition font-semibold">Submit Review</button>
+          <button onClick={submitReview} className="w-full py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition font-semibold shadow-md">
+            Submit Review
+          </button>
         </div>
       </main>
     </div>
