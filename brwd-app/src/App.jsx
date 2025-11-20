@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, push, onValue, update } from 'firebase/database';
+import { getDatabase, ref, set, push, onValue, update, get } from 'firebase/database';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // Firebase configuration - Replace with your actual config from Firebase Console
@@ -12,8 +12,6 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  // Note: measurementId is not in your .env, so you can either add it there 
-  // or leave it hardcoded if it's not a secret.
   measurementId: "G-84HDZ3QW0P" 
 };
 
@@ -24,13 +22,13 @@ const auth = getAuth(app);
 
 // Product data
 const products = {
-  milktea: [
-    { id: 'mt1', name: 'Classic Milk Tea', price: 85, category: 'milktea', image: '🧋' },
-    { id: 'mt2', name: 'Taro Milk Tea', price: 95, category: 'milktea', image: '🧋' },
-    { id: 'mt3', name: 'Matcha Milk Tea', price: 95, category: 'milktea', image: '🧋' },
-    { id: 'mt4', name: 'Chocolate Milk Tea', price: 90, category: 'milktea', image: '🧋' },
-    { id: 'mt5', name: 'Wintermelon Milk Tea', price: 85, category: 'milktea', image: '🧋' },
-    { id: 'mt6', name: 'Okinawa Milk Tea', price: 100, category: 'milktea', image: '🧋' },
+  coffee: [
+    { id: 'co1', name: 'Iced Latte', price: 120, category: 'coffee', image: '☕' },
+    { id: 'co2', name: 'Caramel Macchiato', price: 135, category: 'coffee', image: '☕' },
+    { id: 'co3', name: 'Americano', price: 90, category: 'coffee', image: '☕' },
+    { id: 'co4', name: 'Mocha', price: 130, category: 'coffee', image: '☕' },
+    { id: 'co5', name: 'Cold Brew', price: 110, category: 'coffee', image: '☕' },
+    { id: 'co6', name: 'Cappuccino', price: 125, category: 'coffee', image: '☕' },
   ],
   fruittea: [
     { id: 'ft1', name: 'Lemon Fruit Tea', price: 80, category: 'fruittea', image: '🍋' },
@@ -51,6 +49,10 @@ const App = () => {
   const [orders, setOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [pendingReview, setPendingReview] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
+  const [successModal, setSuccessModal] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [orderPlacedModal, setOrderPlacedModal] = useState(false);
 
   useEffect(() => {
     // Listen for reviews
@@ -84,14 +86,135 @@ const App = () => {
     }
   }, [user]);
 
+  const ErrorModal = () => {
+    if (!errorModal) return null; // Don't render if no error
+
+    return (
+      // Background overlay to cover the whole screen
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* Modal content box */}
+        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm transform transition-all">
+          <h3 className="text-2xl font-bold text-red-600 mb-4">Error</h3>
+          
+          <p className="text-gray-700 mb-6">{errorModal}</p>
+          
+          <button
+            onClick={() => setErrorModal(null)}
+            className="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const SuccessModal = () => {
+    if (!successModal) return null;
+
+    return (
+      // Background overlay 
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* Modal content box */}
+        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm transform transition-all">
+          <h3 className="text-2xl font-bold text-green-600 mb-4">Success!</h3>
+          
+          <p className="text-gray-700 mb-6">{successModal}</p>
+          
+          <button
+            onClick={() => setSuccessModal(null)}
+            className="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold"
+          >
+            Awesome!
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const OrderSuccessModal = () => {
+    if (!orderPlacedModal) return null;
+
+    const handleNavigation = (page) => {
+      setOrderPlacedModal(false);
+      setCurrentPage(page);     
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+          <h3 className="text-2xl font-bold text-green-600 mb-4 text-center">Order Confirmed!</h3>
+          
+          <p className="text-gray-700 mb-8 text-center">
+            Your order has been placed successfully. Where would you like to go now?
+          </p>
+          
+          <div className="flex justify-around gap-4">
+            <button
+              onClick={() => handleNavigation('orders')}
+              className="flex-1 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-semibold"
+            >
+              Go to My Orders
+            </button>
+
+            <button
+              onClick={() => handleNavigation('menu')}
+              className="flex-1 py-3 border-2 border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50 transition font-semibold"
+            >
+              Keep Browsing
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const Toast = () => {
+    if (!toastMessage) return null; // Don't render if no message
+
+    return (
+      <div className="fixed bottom-6 right-6 z-50 transition-opacity duration-300">
+        <div className="bg-green-500 text-white rounded-lg shadow-xl p-4 flex items-center gap-3">
+          <span className="text-xl">✅</span>
+          <p className="font-semibold">{toastMessage}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const checkAdminStatus = async (uid) => {
+    const adminRef = ref(database, `admins/${uid}`);
+    const snapshot = await get(adminRef);
+
+    if (snapshot.exists() && snapshot.val() === true) {
+      return true;
+    }
+    return false;
+  };
+
   const handleLogin = async (email, password, asAdmin) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userUid = userCredential.user.uid;
+      let finalIsAdmin = false;
+
+      if (asAdmin) {
+        const isAdminUser = await checkAdminStatus(userUid);
+        
+        if (!isAdminUser) {
+
+          setErrorModal('Account is not registered as admin.');
+          await signOut(auth); 
+          return;
+        }
+        finalIsAdmin = true; 
+      }
+      setIsAdmin(finalIsAdmin);
       setUser(userCredential.user);
-      setIsAdmin(asAdmin);
       setCurrentPage('menu');
+
     } catch (error) {
-      alert('Login failed: ' + error.message);
+      setErrorModal('Login failed: No account found with provided credentials.');
     }
   };
 
@@ -102,7 +225,7 @@ const App = () => {
       setIsAdmin(false);
       setCurrentPage('menu');
     } catch (error) {
-      alert('Signup failed: ' + error.message);
+      setErrorModal('Signup failed: ' + error.message);
     }
   };
 
@@ -132,8 +255,8 @@ const App = () => {
     
     await set(orderRef, order);
     setCart([]);
-    alert('Order placed successfully!');
-    setCurrentPage('menu');
+    
+    setOrderPlacedModal(true); 
   };
 
   const markOrderComplete = async (orderId) => {
@@ -161,7 +284,7 @@ const App = () => {
     }
     
     setPendingReview(null);
-    alert('Review submitted! Thank you for your feedback.');
+    setSuccessModal('Review successfully submitted! Thank you for your valuable feedback.');
     setCurrentPage('feedback');
   };
 
@@ -170,7 +293,7 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex flex-col">
       <nav className="bg-white shadow-md px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-amber-600">brwd.</h1>
+          <h1 className="text-4xl font-bold text-amber-600">BRWD.</h1>
           <div className="flex gap-4">
             <button onClick={() => setCurrentPage('login')} className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition">
               Log In
@@ -182,11 +305,17 @@ const App = () => {
         </div>
       </nav>
       
-      <main className="flex-1 flex items-center justify-center px-8">
-        <div className="text-center">
-          <h2 className="text-6xl font-bold text-amber-700 mb-4">Welcome to brwd.</h2>
+      <main 
+            className="relative flex-1 flex flex-col items-center justify-center p-8 bg-contain bg-center bg-no-repeat" 
+            style={{ 
+              backgroundImage: 'url(/image/SignupPage.png)', 
+              minHeight: '100vh', 
+            }}
+      >
+        <div className="absolute inset-0 backdrop-blur-[3px]"></div>
+        <div className="relative text-center z-10 p-8 rounded-2xl bg-white bg-opacity-80 shadow-2xl backdrop-blur-sm"> 
+          <h2 className="text-6xl font-bold text-amber-700 mb-4">Welcome to BRWD.</h2>
           <p className="text-2xl text-amber-600 mb-8">Your favorite milk tea & fruit tea destination</p>
-          <div className="text-8xl mb-8">🧋</div>
           <button onClick={() => setCurrentPage('menu')} className="px-8 py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition shadow-lg">
             View Menu
           </button>
@@ -199,67 +328,108 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [userType, setUserType] = useState('user');
+    
+    const baseClasses = "min-h-screen flex items-center justify-center px-4 transition-all duration-500";
+    const backgroundClasses = userType === 'user' 
+      ? 'bg-gradient-to-br from-amber-50 to-orange-100' 
+      : '';
+
+    const bgImagePath = userType === 'admin' ? '/image/admin.jpg' : '/image/SignupPage.png';
+
+    const backgroundStyle = {
+      backgroundImage: `url(${bgImagePath})`,
+      backgroundSize: userType === 'user' ? 'contain' : 'cover', 
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      minHeight: '100vh',
+    };
+
+    const adminLayoutClasses = userType === 'admin' ? 'md:justify-around gap-8 p-0' : 'md:justify-center';
+    const formLayoutClasses = userType === 'admin' ? 'md:flex-shrink-0 md:w-1/2 md:max-w-lg md:px-12 md:py-16' : ''
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+      <div 
+       className={`${baseClasses} ${backgroundClasses} ${adminLayoutClasses}`}
+      >
+        {userType === 'user' && (
+             <div className="absolute inset-0 bg-black opacity-30 backdrop-blur-sm"></div>
+        )}
+
+        {userType === 'admin' && (
+          <div className="flex-1 min-h-screen hidden md:flex items-center justify-center relative overflow-hidden p-8 transition-opacity duration-500 opacity-100">
+            <img 
+              src={bgImagePath}
+              alt="Admin Login Background" 
+              className="object-contain h-full w-full max-w-lg md:max-w-2xl lg:max-w-3xl shadow-2xl"
+            />
+            <div className="absolute top-10 center text-amber-700 text-4xl font-bold drop-shadow-lg">
+                Hello, Admin.
+            </div>
+          </div>
+        )}
+
+       <div 
+          className={`bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10 transition-all duration-500 ${formLayoutClasses}`}
+        >
           <button onClick={() => setCurrentPage('home')} className="text-amber-600 mb-4 hover:text-amber-700">
             ← Back to Home
           </button>
-          <h2 className="text-3xl font-bold text-amber-700 mb-6 text-center">Log In</h2>
           
-          <div className="space-y-4">
+          <h2 className="text-4xl font-bold text-amber-700 mb-6 text-center">Log In</h2>
+
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
                 placeholder="your@email.com"
               />
             </div>
-            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
                 placeholder="••••••••"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Login as</label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="user"
-                    checked={userType === 'user'}
-                    onChange={(e) => setUserType(e.target.value)}
-                    className="mr-2"
-                  />
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setUserType('user')}
+                  className={`flex-1 py-2 text-center rounded-lg font-medium transition-colors duration-200 
+                    ${userType === 'user' 
+                      ? 'bg-amber-500 text-white shadow-md' 
+                      : 'text-gray-600 hover:bg-white'}`
+                  }
+                >
                   User
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="admin"
-                    checked={userType === 'admin'}
-                    onChange={(e) => setUserType(e.target.value)}
-                    className="mr-2"
-                  />
+                </button>
+                <button
+                  onClick={() => setUserType('admin')}
+                  className={`flex-1 py-2 text-center rounded-lg font-medium transition-colors duration-200 
+                    ${userType === 'admin' 
+                      ? 'bg-amber-500 text-white shadow-md' 
+                      : 'text-gray-600 hover:bg-white'}`
+                  }
+                >
                   Admin
-                </label>
+                </button>
               </div>
             </div>
-            
+
             <button
               onClick={() => handleLogin(email, password, userType === 'admin')}
-              className="w-full py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-semibold"
+              className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
             >
               Log In
             </button>
@@ -340,7 +510,7 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <nav className="bg-white shadow-md px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
+          <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
           <div className="flex items-center gap-4">
             {user && (
               <>
@@ -373,9 +543,9 @@ const App = () => {
         <h2 className="text-4xl font-bold text-amber-700 mb-8">Our Menu</h2>
         
         <div className="mb-12">
-          <h3 className="text-2xl font-semibold text-amber-600 mb-6">Milk Tea</h3>
+          <h3 className="text-2xl font-semibold text-amber-600 mb-6">Coffee</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.milktea.map(product => (
+            {products.coffee.map(product => (
               <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
                 <div className="text-6xl mb-4 text-center">{product.image}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
@@ -384,9 +554,10 @@ const App = () => {
                   onClick={() => {
                     if (user) {
                       addToCart(product);
-                      alert('Added to cart!');
+                      setToastMessage(`${product.name} added to your cart!`); 
+                      setTimeout(() => setToastMessage(null), 3000); // Hide after 3 seconds (3000ms)
                     } else {
-                      alert('Please log in to order');
+                      setErrorModal('Please log in to order. You must have an account to add items to your cart.');
                       setCurrentPage('login');
                     }
                   }}
@@ -411,9 +582,10 @@ const App = () => {
                   onClick={() => {
                     if (user) {
                       addToCart(product);
-                      alert('Added to cart!');
+                      setToastMessage(`${product.name} added to your cart!`); 
+                      setTimeout(() => setToastMessage(null), 3000); // Hide after 3 seconds (3000ms)
                     } else {
-                      alert('Please log in to order');
+                      setErrorModal('Please log in to order. You must have an account to add items to your cart.');
                       setCurrentPage('login');
                     }
                   }}
@@ -433,7 +605,7 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <nav className="bg-white shadow-md px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
+          <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
           <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
             ← Back to Menu
           </button>
@@ -486,58 +658,64 @@ const App = () => {
     </div>
   );
 
-  const OrdersPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <nav className="bg-white shadow-md px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
-          <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
-            ← Back to Menu
-          </button>
-        </div>
-      </nav>
-      
-      <main className="max-w-4xl mx-auto px-8 py-12">
-        <h2 className="text-4xl font-bold text-amber-700 mb-8">My Orders</h2>
+  const OrdersPage = () => {
+    const sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
+
+    return ( // <-- Explicit return added
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <nav className="bg-white shadow-md px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
+            <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
+              ← Back to Menu
+            </button>
+          </div>
+        </nav>
         
-        {orders.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <p className="text-xl text-gray-600">No orders yet</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {orders.map(order => (
-              <div key={order.id} className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Order Date: {new Date(order.timestamp).toLocaleDateString()}</p>
-                    <p className="text-sm font-semibold text-amber-600">{order.status}</p>
+        <main className="max-w-4xl mx-auto px-8 py-12">
+          <h2 className="text-4xl font-bold text-amber-700 mb-8">My Orders</h2>
+          
+          {/* Use the sortedOrders array for the check */}
+          {sortedOrders.length === 0 ? ( 
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <p className="text-xl text-gray-600">No orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Map over the sorted array */}
+              {sortedOrders.map(order => ( 
+                <div key={order.id} className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Order Date: {new Date(order.timestamp).toLocaleDateString()}</p>
+                      <p className="text-sm font-semibold text-amber-600">{order.status}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-amber-600">₱{order.total}</p>
                   </div>
-                  <p className="text-2xl font-bold text-amber-600">₱{order.total}</p>
+                  
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="py-2 border-t">
+                      <span className="text-2xl mr-2">{item.image}</span>
+                      {item.name}
+                    </div>
+                  ))}
+                  
+                  {!order.completed && (
+                    <button
+                      onClick={() => markOrderComplete(order.id)}
+                      className="mt-4 w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    >
+                      Mark as Complete
+                    </button>
+                  )}
                 </div>
-                
-                {order.items.map((item, idx) => (
-                  <div key={idx} className="py-2 border-t">
-                    <span className="text-2xl mr-2">{item.image}</span>
-                    {item.name}
-                  </div>
-                ))}
-                
-                {!order.completed && (
-                  <button
-                    onClick={() => markOrderComplete(order.id)}
-                    className="mt-4 w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-                  >
-                    Mark as Complete
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
-  );
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  };
 
   const ReviewPage = () => {
     const [rating, setRating] = useState(5);
@@ -547,7 +725,7 @@ const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
         <nav className="bg-white shadow-md px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-amber-600">brwd.</h1>
+            <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
             <button onClick={() => setCurrentPage('menu')} className="text-amber-600 hover:text-amber-700">
               Skip Review
             </button>
@@ -653,7 +831,15 @@ const App = () => {
     }
   };
 
-  return renderPage();
+  return (
+    <>
+      {renderPage()}
+      <ErrorModal />
+      <SuccessModal />
+      <Toast />
+      <OrderSuccessModal />
+    </>
+  );
 };
 
 export default App;
