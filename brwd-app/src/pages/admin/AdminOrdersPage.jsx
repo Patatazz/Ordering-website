@@ -28,7 +28,7 @@ const AdminOrdersPage = ({ allOrders, updateOrderStatus, setCurrentPage, handleL
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-        <nav className="bg-white shadow-md px-8 py-4">
+        <nav className="bg-white shadow-md px-4 md:px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">BRWD. Admin Dashboard</h1>
             <div className="flex gap-4">
@@ -46,7 +46,7 @@ const AdminOrdersPage = ({ allOrders, updateOrderStatus, setCurrentPage, handleL
           {activeOrders.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-12 text-center"><p className="text-xl text-gray-600">No active orders found.</p></div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {sortedOrders.map(order => ( 
                 <div key={order.id} className="bg-white rounded-xl shadow-lg p-6 border-4 border-transparent hover:border-amber-500 transition">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${getStatusColor(order.status)}`}>{order.status.toUpperCase()}</span>

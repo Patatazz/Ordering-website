@@ -2,7 +2,7 @@ import React from 'react';
 import { ref, update, set } from 'firebase/database';
 
 const AdminCareersPage = ({ applications, isAdmin, database, setCurrentPage, handleLogout }) => {
-    // Group applications by position
+
     const groupedApplications = applications.reduce((acc, app) => {
       if (!acc[app.position]) {
         acc[app.position] = [];
@@ -11,7 +11,6 @@ const AdminCareersPage = ({ applications, isAdmin, database, setCurrentPage, han
       return acc;
     }, {});
     
-    // Sort positions by number of applicants
     const sortedPositions = Object.keys(groupedApplications).sort((a, b) => {
       return groupedApplications[b].length - groupedApplications[a].length;
     });

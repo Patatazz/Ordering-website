@@ -10,7 +10,7 @@ const AdminSalesReportPage = ({ dailySales, setCurrentPage, handleLogout }) => {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-        <nav className="bg-white shadow-md px-8 py-4">
+        <nav className="bg-white shadow-md px-4 md:px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">Sales Report</h1>
             <div className="flex gap-4">
@@ -30,7 +30,7 @@ const AdminSalesReportPage = ({ dailySales, setCurrentPage, handleLogout }) => {
         <main className="max-w-6xl mx-auto px-8 py-12">
           <h2 className="text-4xl font-bold text-red-700 mb-8">Daily Sales Summary</h2>
           
-          <div className="bg-red-600 text-white rounded-xl shadow-2xl p-6 mb-10 flex justify-around">
+          <div className="bg-red-600 text-white rounded-xl shadow-2xl p-6 mb-10 flex flex-col md:flex-row gap-6 md:gap-0 justify-around items-center">
             <div className="text-center">
               <p className="text-sm opacity-80">Total Orders Tracked</p>
               <p className="text-4xl font-extrabold">{grandTotalOrders}</p>

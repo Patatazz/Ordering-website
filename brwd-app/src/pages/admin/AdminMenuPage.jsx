@@ -46,7 +46,7 @@ const AdminMenuPage = ({ products, updateProductPrice, toggleSoldOut, setErrorMo
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-        <nav className="bg-white shadow-md px-8 py-4">
+        <nav className="bg-white shadow-md px-4 md:px-8 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-3xl font-bold text-red-600">BRWD. Admin Menu Editor</h1>
             <div className="flex gap-4">
@@ -59,13 +59,13 @@ const AdminMenuPage = ({ products, updateProductPrice, toggleSoldOut, setErrorMo
           <h2 className="text-4xl font-bold text-red-700 mb-8">Manage Products & Pricing</h2>
           <div className="mb-12">
             <h3 className="text-2xl font-semibold text-amber-700 mb-6">Milktea</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {products.milktea.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
             </div>
           </div>
           <div>
             <h3 className="text-2xl font-semibold text-amber-700 mb-6">Fruit Tea</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {products.fruittea.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
             </div>
           </div>

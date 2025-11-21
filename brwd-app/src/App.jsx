@@ -50,13 +50,13 @@ const App = () => {
         setIsAdmin(isAdminUser);
 
         if (currentPage === 'login' || currentPage === 'signup' || currentPage === 'home') {
-             setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
+          setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
         }
       } else {
         setUser(null);
         setIsAdmin(false);
         if (currentPage !== 'home' && currentPage !== 'login' && currentPage !== 'signup') {
-            setCurrentPage('home');
+          setCurrentPage('home');
         }
       }
       setLoading(false);
