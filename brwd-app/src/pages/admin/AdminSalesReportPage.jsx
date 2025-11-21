@@ -11,16 +11,19 @@ const AdminSalesReportPage = ({ dailySales, setCurrentPage, handleLogout }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
         <nav className="bg-white shadow-md px-4 md:px-8 py-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-red-600">Sales Report</h1>
-            <div className="flex gap-4">
-              <button onClick={() => setCurrentPage('admin_menu')} className="text-red-600 hover:text-red-700 font-bold">
-                Menu Editor
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-red-600 text-center">Sales Report</h1>
+            <div className="flex flex-wrap justify-center gap-2 md:gap-4 w-full md:w-auto">
+              <button onClick={() => setCurrentPage('admin_orders')} className="text-sm md:text-base text-red-600 hover:text-red-700 font-bold px-2">
+                Dashboard
               </button>
-              <button onClick={() => setCurrentPage('admin_orders')} className="text-red-600 hover:text-red-700 font-bold">
-                ← Back to Live Orders
+              <button onClick={() => setCurrentPage('admin_menu')} className="text-sm md:text-base text-red-600 hover:text-red-700 font-bold px-2">
+                Menu
               </button>
-              <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
+              <button onClick={() => setCurrentPage('admin_careers')} className="text-sm md:text-base text-red-600 hover:text-red-700 font-bold px-2">
+                Careers
+              </button>
+              <button onClick={handleLogout} className="text-sm md:text-base px-3 py-1 md:px-4 md:py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50">
                 Logout
               </button>
             </div>
