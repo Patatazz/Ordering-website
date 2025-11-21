@@ -4,7 +4,6 @@ import { getDatabase, ref, set, push, onValue, update, get } from 'firebase/data
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
-// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -16,13 +15,11 @@ const firebaseConfig = {
   measurementId: "G-84HDZ3QW0P" 
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Product data
 const products = {
   milktea: [
     { id: 'mt1', name: 'Classic Milk Tea', price: 110, category: 'milktea', image: '🧋' },
