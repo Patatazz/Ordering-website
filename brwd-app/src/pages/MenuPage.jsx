@@ -4,7 +4,7 @@ const MenuPage = ({ products, user, isAdmin, cart, addToCart, setCurrentPage, ha
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <nav className="bg-white shadow-md px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <h1 className="text-3xl font-bold text-amber-600">BRWD.</h1>
           <div className="flex items-center gap-4">
             {user && (

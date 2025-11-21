@@ -11,11 +11,11 @@ const HomePage = ({ setCurrentPage }) => (
         </div>
       </div>
     </nav>
-    <main className="relative flex-1 flex flex-col items-center justify-center p-8 bg-contain bg-center bg-no-repeat" style={{ backgroundImage: 'url(/image/Pages/SignupPage.png)', minHeight: '100vh' }}>
+    <main className="relative flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-contain bg-center bg-no-repeat" style={{ backgroundImage: 'url(/image/Pages/SignupPage.png)', minHeight: '100vh' }}>
       <div className="absolute inset-0 backdrop-blur-[3px]"></div>
       <div className="relative text-center z-10 p-8 rounded-2xl bg-white bg-opacity-80 shadow-2xl backdrop-blur-sm"> 
-        <h2 className="text-6xl font-bold text-amber-700 mb-4">Welcome to BRWD.</h2>
-        <p className="text-2xl text-amber-600 mb-8">Your favorite milk tea & fruit tea destination</p>
+        <h2 className="text-4xl md:text-6xl font-bold text-amber-700 mb-4 text-center">Welcome to BRWD.</h2>
+        <p className="text-lg md:text-2xl text-amber-600 mb-8 text-center">Your favorite milk tea & fruit tea destination</p>
         <div className="flex justify-center gap-6">
           <button onClick={() => setCurrentPage('menu')} className="px-8 py-4 bg-amber-500 text-white text-xl rounded-lg hover:bg-amber-600 transition shadow-lg">View Menu</button>
           <button onClick={() => setCurrentPage('careers')} className="px-8 py-4 border-2 border-amber-500 text-amber-600 text-xl rounded-lg hover:bg-amber-50 transition shadow-lg">Careers</button>

@@ -47,8 +47,7 @@ const CareersPage = ({ submitApplication, setCurrentPage, setErrorModal }) => {
 
   return (
     <div className="min-h-screen flex">
-      
-      {/* LEFT SIDE: Image Centered */}
+
       <div className="hidden md:flex md:w-1/2 lg:w-5/12 bg-amber-800 items-center justify-center relative p-8">
           <div className="absolute w-96 h-96 bg-white rounded-full opacity-10 blur-3xl pointer-events-none"></div>
           
@@ -64,11 +63,9 @@ const CareersPage = ({ submitApplication, setCurrentPage, setErrorModal }) => {
           </div>
       </div>
 
-      {/* RIGHT SIDE: Content (Scrollable) */}
       <div className="w-full md:w-1/2 lg:w-7/12 bg-gradient-to-br from-amber-50 to-orange-100 h-screen overflow-y-auto">
-          
           <nav className="bg-white/80 backdrop-blur-md shadow-sm px-8 py-4 sticky top-0 z-50">
-            <div className="flex items-center justify-between">
+            <div className="px-4 md:px-8 py-8 md:py-12 max-w-2xl mx-auto">
               <h1 className="text-2xl font-bold text-amber-600">BRWD. Careers</h1>
               <button onClick={() => setCurrentPage('home')} className="text-amber-600 hover:text-amber-700 font-medium">
                 ← Back to Home
@@ -77,13 +74,11 @@ const CareersPage = ({ submitApplication, setCurrentPage, setErrorModal }) => {
           </nav>
           
           <div className="px-8 py-12 max-w-2xl mx-auto">
-              
               <div className="mb-12 text-center md:text-left">
                   <h2 className="text-4xl font-bold text-amber-800 mb-4">Join Our Team!</h2>
                   <p className="text-gray-600">We are looking for passionate individuals to craft the best coffee and tea experiences.</p>
               </div>
 
-              {/* Job Descriptions */}
               <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-l-4 border-amber-500">
                   <h3 className="text-2xl font-bold text-amber-600 mb-6">Available Positions</h3>
                   <div className="space-y-6">
@@ -101,7 +96,6 @@ const CareersPage = ({ submitApplication, setCurrentPage, setErrorModal }) => {
                   </div>
               </div>
 
-              {/* Application Form */}
               <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-6">
                   <h3 className="text-2xl font-bold text-amber-600 mb-2">Apply Now</h3>
                   <p className="text-sm text-gray-500 mb-6">Fill out the form below to submit your application.</p>
