@@ -1,1 +1,8 @@
 /prototype
+
+# Standard Node/npm ignore rules
+/node_modules
+/npm-debug.log
+
+# Specific cache folder if you only want to ignore the cache
+brwd-app/node_modules/.cache
