@@ -235,7 +235,6 @@ const App = () => {
     setCart([]);
   };
 
-
   const addToCart = (product) => {
     setCart([...cart, { ...product, size: 'regular', sweetness: '100%', ice: 'normal' }]);
   };
