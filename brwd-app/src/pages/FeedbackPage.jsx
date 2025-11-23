@@ -96,9 +96,18 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
             <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
                 <h3 className="text-xl md:text-2xl font-bold text-amber-700">Customer Reviews</h3>
                 <div className="flex bg-white rounded-lg shadow-sm p-1 gap-1 w-full md:w-auto justify-center">
-                    <button onClick={() => setFilter('ALL')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition ${filter === 'ALL' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>All</button>
-                    <button onClick={() => setFilter('GOOD')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition ${filter === 'GOOD' ? 'bg-green-500 text-white' : 'text-gray-600 hover:bg-green-50'}`}>Positive</button>
-                    <button onClick={() => setFilter('BAD')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition ${filter === 'BAD' ? 'bg-red-500 text-white' : 'text-gray-600 hover:bg-red-50'}`}>Negative</button>
+                    <button onClick={() => setFilter('ALL')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition 
+                    ${filter === 'ALL' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                      All
+                    </button>
+                    <button onClick={() => setFilter('GOOD')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition 
+                    ${filter === 'GOOD' ? 'bg-green-500 text-white' : 'text-gray-600 hover:bg-green-50'}`}>
+                      Positive
+                    </button>
+                    <button onClick={() => setFilter('BAD')} className={`flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-medium transition 
+                    ${filter === 'BAD' ? 'bg-red-500 text-white' : 'text-gray-600 hover:bg-red-50'}`}>
+                      Negative
+                    </button>
                 </div>
             </div>
 
@@ -116,7 +125,8 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
                             ))}
                             </div>    
                             {review.sentiment && review.sentiment !== 'NEUTRAL' && (
-                                <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded uppercase ${review.sentiment === 'GOOD' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded uppercase 
+                                ${review.sentiment === 'GOOD' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                     {review.sentiment === 'GOOD' ? 'Positive' : 'Negative'}
                                 </span>
                             )}
@@ -159,7 +169,8 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
               {products.milktea.map(product => {
                 const stats = getSentimentStats(product.id);
                 return (
-                  <div key={product.id} onClick={() => setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
+                  <div key={product.id} onClick={() => 
+                  setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
                     <img src={product.image} alt={product.name} className="w-32 h-32 object-contain mx-auto mb-4" />
                     <h4 className="text-xl font-semibold text-gray-800 mb-2 text-center">{product.name}</h4>
                     <p className="text-2xl font-bold text-amber-600 mb-3 text-center">₱{product.price}</p>
@@ -180,7 +191,8 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
               {products.fruittea.map(product => {
                 const stats = getSentimentStats(product.id); 
                 return (
-                  <div key={product.id} onClick={() => setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
+                  <div key={product.id} onClick={() => 
+                  setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
                     <img src={product.image} alt={product.name} className="w-32 h-32 object-contain mx-auto mb-4" />
                     <h4 className="text-xl font-semibold text-gray-800 mb-2 text-center">{product.name}</h4>
                     <p className="text-2xl font-bold text-amber-600 mb-3 text-center">₱{product.price}</p>

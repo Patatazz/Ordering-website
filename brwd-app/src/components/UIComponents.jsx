@@ -46,8 +46,10 @@ export const OrderSuccessModal = ({ isOpen, onNavigate }) => {
         <h3 className="text-2xl font-bold text-green-600 mb-4 text-center">Order Confirmed!</h3>
         <p className="text-gray-700 mb-8 text-center">Your order has been placed successfully. Where would you like to go now?</p>
         <div className="flex justify-around gap-4">
-          <button onClick={() => onNavigate('orders')} className="flex-1 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-semibold">Go to My Orders</button>
-          <button onClick={() => onNavigate('menu')} className="flex-1 py-3 border-2 border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50 transition font-semibold">Keep Browsing</button>
+          <button onClick={() => onNavigate('orders')} className="flex-1 py-3 bg-amber-500 text-white 
+          rounded-lg hover:bg-amber-600 transition font-semibold">Go to My Orders</button>
+          <button onClick={() => onNavigate('menu')} className="flex-1 py-3 border-2 border-amber-500 
+          text-amber-600 rounded-lg hover:bg-amber-50 transition font-semibold">Keep Browsing</button>
         </div>
       </div>
     </div>

@@ -10,19 +10,31 @@ const MenuPage = ({ products, user, isAdmin, cart, addToCart, setCurrentPage, ha
             {user && (
               <>
                 {isAdmin ? (
-                   <button onClick={() => setCurrentPage('admin_orders')} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold">Dashboard</button>
+                   <button onClick={() => setCurrentPage('admin_orders')} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold">
+                    Dashboard
+                  </button>
                 ) : (
-                   <button onClick={() => setCurrentPage('orders')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">My Orders</button>
+                   <button onClick={() => setCurrentPage('orders')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
+                     My Orders
+                   </button>
                 )}
-                <button onClick={() => setCurrentPage('feedback')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">Feedback</button>
+                <button onClick={() => setCurrentPage('feedback')} className="px-4 py-2 text-amber-600 hover:bg-amber-50 rounded-lg">
+                  Feedback
+                </button>
                 {cart.length > 0 && (
-                  <button onClick={() => setCurrentPage('order')} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 relative">Cart ({cart.length})</button>
+                  <button onClick={() => setCurrentPage('order')} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 relative">
+                    Cart ({cart.length})
+                  </button>
                 )}
-                <button onClick={handleLogout} className="px-4 py-2 border border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50">Logout</button>
+                <button onClick={handleLogout} className="px-4 py-2 border border-amber-500 text-amber-600 rounded-lg hover:bg-amber-50">
+                  Logout
+                </button>
               </>
             )}
             {!user && (
-              <button onClick={() => setCurrentPage('login')} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">Log In</button>
+              <button onClick={() => setCurrentPage('login')} className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                Log In
+              </button>
             )}
           </div>
         </div>
@@ -36,8 +48,12 @@ const MenuPage = ({ products, user, isAdmin, cart, addToCart, setCurrentPage, ha
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.milktea.map(product => (
               <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer relative">
-                {product.soldOut && <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">SOLD OUT</span>}
-                <img src={product.image} alt={product.name} className="w-40 h-40 object-contain mx-auto mb-4 drop-shadow-md hover:scale-110 transition-transform duration-300" />
+                {product.soldOut && 
+                <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">
+                  SOLD OUT
+                </span>}
+                <img src={product.image} alt={product.name} 
+                className="w-40 h-40 object-contain mx-auto mb-4 drop-shadow-md hover:scale-110 transition-transform duration-300" />
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
                 <button
@@ -67,8 +83,12 @@ const MenuPage = ({ products, user, isAdmin, cart, addToCart, setCurrentPage, ha
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.fruittea.map(product => (
               <div key={product.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition transform hover:scale-105 cursor-pointer relative">
-                {product.soldOut && <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">SOLD OUT</span>}
-                <img src={product.image} alt={product.name} className="w-40 h-40 object-contain mx-auto mb-4 drop-shadow-md hover:scale-110 transition-transform duration-300" />
+                {product.soldOut && 
+                <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">
+                  SOLD OUT
+                </span>}
+                <img src={product.image} alt={product.name} 
+                className="w-40 h-40 object-contain mx-auto mb-4 drop-shadow-md hover:scale-110 transition-transform duration-300" />
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h4>
                 <p className="text-2xl font-bold text-amber-600 mb-4">₱{product.price}</p>
                 <button

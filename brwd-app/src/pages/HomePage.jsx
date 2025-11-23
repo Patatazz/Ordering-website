@@ -41,7 +41,8 @@ const HomePage = ({ setCurrentPage }) => (
           </button>
           <button 
             onClick={() => setCurrentPage('careers')} 
-            className="w-full sm:w-auto px-8 py-3 md:py-4 border-2 border-amber-500 text-amber-600 text-lg md:text-xl rounded-lg hover:bg-amber-50 transition shadow-lg font-semibold"
+            className="w-full sm:w-auto px-8 py-3 md:py-4 border-2 border-amber-500 text-amber-600 text-lg 
+            md:text-xl rounded-lg hover:bg-amber-50 transition shadow-lg font-semibold"
           >
             Careers
           </button>

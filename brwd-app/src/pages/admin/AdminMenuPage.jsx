@@ -38,7 +38,10 @@ const AdminMenuPage = ({ products, updateProductPrice, toggleSoldOut, setErrorMo
             <h4 className="text-xl font-semibold text-gray-800">{product.name}</h4>
             <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
             <div className="flex gap-2 pt-3 border-t">
-                <button onClick={() => toggleSoldOut(product.category, product)} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${product.soldOut ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}>{product.soldOut ? 'Mark Available' : 'Mark Sold Out'}</button>
+                <button onClick={() => toggleSoldOut(product.category, product)} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition 
+                ${product.soldOut ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}>
+                  {product.soldOut ? 'Mark Available' : 'Mark Sold Out'}
+                </button>
                 <button onClick={() => { setEditingProduct(product); setNewPrice(product.price.toString()); }} className="flex-1 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">Edit Price</button>
             </div>
         </div>

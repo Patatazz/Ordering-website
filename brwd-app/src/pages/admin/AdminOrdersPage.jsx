@@ -78,8 +78,16 @@ const AdminOrdersPage = ({ allOrders, updateOrderStatus, setCurrentPage, handleL
                     <p className="text-xl font-bold text-red-600">₱{order.total}</p>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <button onClick={() => updateOrderStatus(order.userId, order.id, 'preparing')} disabled={order.status === 'preparing' || order.status === 'served' || order.status === 'completed'} className="flex-1 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 transition disabled:bg-gray-200 disabled:text-gray-400">Preparing</button>
-                    <button onClick={() => updateOrderStatus(order.userId, order.id, 'served')} disabled={order.status === 'served' || order.status === 'completed'} className="flex-1 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition disabled:bg-gray-200 disabled:text-gray-400">Served</button>
+                    <button onClick={() => updateOrderStatus(order.userId, order.id, 'preparing')} disabled={order.status === 'preparing' || 
+                    order.status === 'served' || order.status === 'completed'} className="flex-1 py-2 bg-yellow-500 text-white text-sm rounded-lg 
+                    hover:bg-yellow-600 transition disabled:bg-gray-200 disabled:text-gray-400">
+                      Preparing
+                    </button>
+                    <button onClick={() => updateOrderStatus(order.userId, order.id, 'served')} disabled={order.status === 'served' 
+                    || order.status === 'completed'} 
+                    className="flex-1 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition disabled:bg-gray-200 disabled:text-gray-400">
+                      Served
+                    </button>
                   </div>
                 </div>
               ))}
