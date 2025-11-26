@@ -50,15 +50,15 @@ const OrderPage = ({ cart, placeOrder, setCurrentPage, removeFromCart }) => {
                         <p className="text-lg md:text-xl font-bold text-amber-600">₱{item.price}</p>
                         
                         <button 
-                            onClick={() => removeFromCart(index)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition"
-                            title="Remove item"
+                          onClick={() => removeFromCart(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition"
+                          title="Remove item"
                         >
-                            <img 
-                                src="/image/icon-trash.svg" 
-                                alt="Delete" 
-                                className="w-6 h-6 md:w-7 md:h-7"
-                            />
+                          <img 
+                            src="/image/icon-trash.svg" 
+                            alt="Delete" 
+                            className="w-6 h-6 md:w-7 md:h-7"
+                          />
                         </button>
                     </div>
                 </div>
