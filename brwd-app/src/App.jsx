@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, push, update, set, get } from 'firebase/database';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  setPersistence, 
+  browserSessionPersistence 
+} from 'firebase/auth';
 import { database, auth } from './config/firebase';
 import { ErrorModal, SuccessModal, Toast, OrderSuccessModal } from './components/UIComponents';
 import { Suspense, lazy } from 'react';
+import useAutoLogout from './hooks/useAutoLogout';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -23,46 +34,62 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState(localStorage.getItem('lastPage') || 'home');
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
   const [products, setProducts] = useState({ milktea: [], fruittea: [] });
-  const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]); 
   const [reviews, setReviews] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [dailySales, setDailySales] = useState({});
   const [applications, setApplications] = useState([]);
   const [pendingReview, setPendingReview] = useState(null);
+
   const [errorModal, setErrorModal] = useState(null);
   const [successModal, setSuccessModal] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
   const [orderPlacedModal, setOrderPlacedModal] = useState(false);
+
   const [loading, setLoading] = useState(true);
+
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     localStorage.setItem('lastPage', currentPage);
   }, [currentPage]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        
-        const isAdminUser = await checkAdminStatus(currentUser.uid);
-        setIsAdmin(isAdminUser);
-
-        if (currentPage === 'login' || currentPage === 'signup' || currentPage === 'home') {
-          setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
+    const enforcePersistence = async () => {
+      await setPersistence(auth, browserSessionPersistence);
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+          setUser(currentUser);
+          const isAdminUser = await checkAdminStatus(currentUser.uid);
+          setIsAdmin(isAdminUser);
+          
+          if (['login', 'signup', 'home'].includes(currentPage)) {
+            setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
+          }
+        } else {
+          setUser(null);
+          setIsAdmin(false);
+          if (!['home', 'login', 'signup'].includes(currentPage)) {
+            setCurrentPage('home');
+          }
         }
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-        if (currentPage !== 'home' && currentPage !== 'login' && currentPage !== 'signup') {
-          setCurrentPage('home');
-        }
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+        setLoading(false);
+      });
+      return unsubscribe;
+    };
+    const cleanupPromise = enforcePersistence();
+    return () => {
+      cleanupPromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, []);
 
 
@@ -110,13 +137,15 @@ const App = () => {
     let unsubscribeOrders = () => {};
     let unsubscribeApps = () => {};
 
-    if (user && isAdmin) {
+    if (user?.uid && isAdmin) {
       const allOrdersRef = ref(database, 'orders'); 
       const appsRef = ref(database, 'applications');
 
       unsubscribeApps = onValue(appsRef, (snapshot) => { 
         const data = snapshot.val();
         setApplications(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+      }, (error) => {
+        console.error("Error fetching applications:", error);
       });
 
       unsubscribeOrders = onValue(allOrdersRef, (snapshot) => { 
@@ -133,7 +162,7 @@ const App = () => {
                 flattenedOrders.push(order);
                 
                 if (order.completed) {
-                  const dateKey = new Date(order.timestamp).toLocaleDateString('en-CA');
+                  const dateKey = new Date(order.timestamp).toISOString().split('T')[0];
                   if (!salesSummary[dateKey]) salesSummary[dateKey] = { totalSales: 0, orderCount: 0, orders: [] };
                   salesSummary[dateKey].totalSales += order.total;
                   salesSummary[dateKey].orderCount += 1;
@@ -148,18 +177,23 @@ const App = () => {
           setAllOrders([]);
           setDailySales({});
         }
+      }, (error) => {
+        console.error("Error fetching orders:", error);
       });
-      
+
       return () => { 
         unsubscribeOrders(); 
         unsubscribeApps(); 
       };
+
     } else {
-      setAllOrders([]); 
-      setDailySales({}); 
+      setAllOrders([]);
+      setDailySales({});
       setApplications([]);
     }
   }, [user?.uid, isAdmin]);
+
+  useAutoLogout(isAdmin);
 
   const LoadingScreen = () => (
     <div className="min-h-screen flex items-center justify-center bg-amber-50">
@@ -187,44 +221,43 @@ const App = () => {
 
   const handleLogin = async (email, password, asAdmin) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userUid = userCredential.user.uid;
-      let finalIsAdmin = false;
-
-      if (asAdmin) {
-        const isAdminUser = await checkAdminStatus(userUid);
-        if (!isAdminUser) { setErrorModal('Account is not registered as admin.'); await signOut(auth); return; }
-        finalIsAdmin = true; 
+      await setPersistence(auth, browserSessionPersistence);
+      
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const isAdminUser = asAdmin ? await checkAdminStatus(cred.user.uid) : false;
+      
+      if (asAdmin && !isAdminUser) {
+        await signOut(auth);
+        setErrorModal('Account is not registered as admin.');
+        return;
       }
-      setIsAdmin(finalIsAdmin);
-      setUser(userCredential.user);
-      setCurrentPage(finalIsAdmin ? 'admin_orders' : 'menu');
-    } catch (error) { setErrorModal('Login failed: No account found.'); }
+      setIsAdmin(isAdminUser);
+      setUser(cred.user);
+      setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
+    } catch (error) { setErrorModal('Login failed: ' + error.message); }
   };
 
   const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const isAdminUser = await checkAdminStatus(user.uid);
+      await setPersistence(auth, browserSessionPersistence);
+
+      const res = await signInWithPopup(auth, new GoogleAuthProvider());
+      const isAdminUser = await checkAdminStatus(res.user.uid);
       setIsAdmin(isAdminUser);
-      setUser(user);
+      setUser(res.user);
       setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
-    } catch (error) { 
-      console.error(error);
-      // console.error("FULL AUTH ERROR:", error.code, error.message);
-      setErrorModal('Google Sign-In failed.'); 
-    }
+    } catch (error) { setErrorModal('Google Sign-In failed.'); }
   };
 
   const handleSignup = async (email, password) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
+      await setPersistence(auth, browserSessionPersistence);
+
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      setUser(cred.user);
       setIsAdmin(false);
       setCurrentPage('menu');
-    } catch (error) { setErrorModal('Signup failed: ' + error.message); }
+    } catch (error) { setErrorModal(error.message); }
   };
 
   const handleLogout = async () => {
