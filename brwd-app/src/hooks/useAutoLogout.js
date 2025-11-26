@@ -7,7 +7,7 @@ const useAutoLogout = (isAdmin) => {
     if (!isAdmin) return;
 
     let timer;
-    const TIMEOUT = 15 * 60 * 1000;
+    const TIMEOUT = 15 * 60 * 1000; 
 
     const resetTimer = () => {
       clearTimeout(timer);
