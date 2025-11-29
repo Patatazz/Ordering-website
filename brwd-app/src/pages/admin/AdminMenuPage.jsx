@@ -70,16 +70,44 @@ const AdminMenuPage = ({ products, updateProductPrice, toggleSoldOut, setErrorMo
         </nav>
         <main className="max-w-7xl mx-auto px-8 py-12">
           <h2 className="text-4xl font-bold text-red-700 mb-8">Manage Products & Pricing</h2>
+
+          {/* Milktea */}
           <div className="mb-12">
             <h3 className="text-2xl font-semibold text-amber-700 mb-6">Milktea</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {products.milktea.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
             </div>
           </div>
-          <div>
+
+          {/* Fruittea */}
+          <div className="mb-12">
             <h3 className="text-2xl font-semibold text-amber-700 mb-6">Fruit Tea</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {products.fruittea.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
+            </div>
+          </div>
+        
+          {/* Fruitmilk */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-700 mb-6">Fruit Milk</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {products.fruitmilk.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
+            </div>
+          </div>
+
+          {/* Iced Coffee */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-700 mb-6">Iced Coffee</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {products.icedcoffee.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
+            </div>
+          </div>
+
+          {/* Frappe */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-700 mb-6">Frappe</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {products.frappe.map(product => (editingProduct && editingProduct.id === product.id ? renderProductEdit(product) : renderProductCard(product)))}
             </div>
           </div>
         </main>

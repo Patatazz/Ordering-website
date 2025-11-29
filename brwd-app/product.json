@@ -20,7 +20,7 @@
   "frappe":{
     "fp1": { "id": "fp1", "name": "Cookies & Cream Frappe", "price": 150, "category": "frappe", "image": "/image/Products/frappe/cc.png", "soldOut": false },
     "fp2": { "id": "fp2", "name": "Cheesecake Frappe", "price": 155, "category": "frappe", "image": "/image/Products/frappe/cheesecake.png", "soldOut": false },
-    "fp3": { "id": "fp3", "name": "Coffee Jelly Frappe", "price": 150, "category": "frappe", "image": "/image/Products/frappe/coffejelly.png", "soldOut": false },
+    "fp3": { "id": "fp3", "name": "Coffee Jelly Frappe", "price": 150, "category": "frappe", "image": "/image/Products/frappe/coffeejelly.png", "soldOut": false },
     "fp4": { "id": "fp4", "name": "Caramel Macchiato Frappe", "price": 160, "category": "frappe", "image": "/image/Products/frappe/cm.png", "soldOut": false },
     "fp5": { "id": "fp5", "name": "Chocolate Frappe", "price": 155, "category": "frappe", "image": "/image/Products/frappe/chocolate.png", "soldOut": false },
     "fp6": { "id": "fp6", "name": "Java Chip Frappe", "price": 160, "category": "frappe", "image": "/image/Products/frappe/javachip.png", "soldOut": false },

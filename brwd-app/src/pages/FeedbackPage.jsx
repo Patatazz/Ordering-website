@@ -29,7 +29,7 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
       setProductReviews(organized);
     }, [reviews]);
 
-    const allProducts = [...products.milktea, ...products.fruittea];
+    const allProducts = [...products.milktea, ...products.fruittea, ...products.fruitmilk, ...products.icedcoffee, ...products.frappe];
 
     const getReviewCount = (productId) => {
       return productReviews[productId]?.reviews.length || 0;
@@ -163,6 +163,8 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
         <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
           <h2 className="text-3xl md:text-4xl font-bold text-amber-700 mb-4 text-center md:text-left">Customer Feedback</h2>
           <p className="text-gray-600 mb-8 text-center md:text-left">Click on any product to see detailed reviews</p>
+
+          {/* {Milktea} */}
           <div className="mb-12">
             <h3 className="text-2xl font-semibold text-amber-600 mb-6">Milktea</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -185,10 +187,80 @@ const FeedbackPage = ({ products, reviews, setCurrentPage }) => {
             </div>
           </div>
 
-          <div>
+          {/* Fruittea */}
+          <div className="mb-12">
             <h3 className="text-2xl font-semibold text-amber-600 mb-6">Fruit Tea</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.fruittea.map(product => {
+                const stats = getSentimentStats(product.id); 
+                return (
+                  <div key={product.id} onClick={() => 
+                  setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
+                    <img src={product.image} alt={product.name} className="w-32 h-32 object-contain mx-auto mb-4" />
+                    <h4 className="text-xl font-semibold text-gray-800 mb-2 text-center">{product.name}</h4>
+                    <p className="text-2xl font-bold text-amber-600 mb-3 text-center">₱{product.price}</p>
+                    <div className="flex gap-2 mt-2 justify-center">
+                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">👍 {stats.good}</span>
+                         <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">👎 {stats.bad}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 italic text-center mt-2">{getReviewCount(product.id)} reviews</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Fruit Milk */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Fruit Milk</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.fruitmilk.map(product => {
+                const stats = getSentimentStats(product.id); 
+                return (
+                  <div key={product.id} onClick={() => 
+                  setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
+                    <img src={product.image} alt={product.name} className="w-32 h-32 object-contain mx-auto mb-4" />
+                    <h4 className="text-xl font-semibold text-gray-800 mb-2 text-center">{product.name}</h4>
+                    <p className="text-2xl font-bold text-amber-600 mb-3 text-center">₱{product.price}</p>
+                    <div className="flex gap-2 mt-2 justify-center">
+                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">👍 {stats.good}</span>
+                         <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">👎 {stats.bad}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 italic text-center mt-2">{getReviewCount(product.id)} reviews</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Iced Coffee */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Iced Coffee</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.icedcoffee.map(product => {
+                const stats = getSentimentStats(product.id); 
+                return (
+                  <div key={product.id} onClick={() => 
+                  setSelectedProduct(product.id)} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer transform hover:scale-105">
+                    <img src={product.image} alt={product.name} className="w-32 h-32 object-contain mx-auto mb-4" />
+                    <h4 className="text-xl font-semibold text-gray-800 mb-2 text-center">{product.name}</h4>
+                    <p className="text-2xl font-bold text-amber-600 mb-3 text-center">₱{product.price}</p>
+                    <div className="flex gap-2 mt-2 justify-center">
+                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">👍 {stats.good}</span>
+                         <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md">👎 {stats.bad}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 italic text-center mt-2">{getReviewCount(product.id)} reviews</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Frappe */}
+          <div className= "mb-12">
+            <h3 className="text-2xl font-semibold text-amber-600 mb-6">Frappe</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.frappe.map(product => {
                 const stats = getSentimentStats(product.id); 
                 return (
                   <div key={product.id} onClick={() => 

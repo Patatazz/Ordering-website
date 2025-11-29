@@ -35,7 +35,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const [products, setProducts] = useState({ milktea: [], fruittea: [] });
+  const [products, setProducts] = useState({ milktea: [], fruittea: [], fruitmilk: [], icedcoffee: [], frappe: [] });
   const [orders, setOrders] = useState([]); 
   const [reviews, setReviews] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
@@ -101,10 +101,13 @@ const App = () => {
         const processedProducts = {
           milktea: data.milktea ? Object.keys(data.milktea).map(key => ({ id: key, ...data.milktea[key] })) : [],
           fruittea: data.fruittea ? Object.keys(data.fruittea).map(key => ({ id: key, ...data.fruittea[key] })) : [],
+          fruitmilk: data.fruitmilk ? Object.keys(data.fruitmilk).map(key => ({ id: key, ...data.fruitmilk[key] })) : [],
+          icedcoffee: data.icedcoffee ? Object.keys(data.icedcoffee).map(key => ({ id: key, ...data.icedcoffee[key] })) : [],
+          frappe: data.frappe ? Object.keys(data.frappe).map(key => ({ id: key, ...data.frappe[key] })) : [],
         };
         setProducts(processedProducts);
       } else {
-        setProducts({ milktea: [], fruittea: [] });
+        setProducts({ milktea: [], fruittea: [], fruitmilk: [], icedcoffee: [], frappe: [] });
       }
     });
     return () => unsubscribe();
