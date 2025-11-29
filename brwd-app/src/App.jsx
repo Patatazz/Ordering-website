@@ -395,13 +395,15 @@ const App = () => {
       case 'signup': 
         return <SignupPage handleSignup={handleSignup} setCurrentPage={handlePageChange} />;
       case 'menu': 
-        return <MenuPage products={products} user={user} isAdmin={isAdmin} cart={cart} addToCart={addToCart} setCurrentPage={handlePageChange} handleLogout={handleLogout} setErrorModal={setErrorModal} setToastMessage={setToastMessage} />;
+        return <MenuPage products={products} user={user} isAdmin={isAdmin} cart={cart} addToCart={addToCart} 
+        setCurrentPage={handlePageChange} handleLogout={handleLogout} setErrorModal={setErrorModal} setToastMessage={setToastMessage} />;
       case 'order': 
         return <OrderPage cart={cart} placeOrder={placeOrder} setCurrentPage={handlePageChange} removeFromCart={removeFromCart} />;
       case 'orders': 
         return <OrdersPage orders={orders} setCurrentPage={handlePageChange} user={user} database={database} setPendingReview={setPendingReview} setErrorModal={setErrorModal} />;
       case 'review': 
-        return <ReviewPage pendingReview={pendingReview} orders={orders} user={user} database={database} setCurrentPage={handlePageChange} setSuccessModal={setSuccessModal} setErrorModal={setErrorModal} />;
+        return <ReviewPage pendingReview={pendingReview} orders={orders} user={user} database={database} 
+        setCurrentPage={handlePageChange} setSuccessModal={setSuccessModal} setErrorModal={setErrorModal} />;
       case 'feedback': 
         return <FeedbackPage products={products} reviews={reviews} setCurrentPage={handlePageChange} />;
       case 'careers': 
@@ -413,7 +415,8 @@ const App = () => {
       case 'admin_careers': 
         return <AdminCareersPage applications={applications} isAdmin={isAdmin} database={database} setCurrentPage={handlePageChange} handleLogout={handleLogout} />;
       case 'admin_menu': 
-        return <AdminMenuPage products={products} updateProductPrice={updateProductPrice} toggleSoldOut={toggleSoldOut} setErrorModal={setErrorModal} setCurrentPage={handlePageChange} handleLogout={handleLogout} />;
+        return <AdminMenuPage products={products} updateProductPrice={updateProductPrice} toggleSoldOut={toggleSoldOut} 
+        setErrorModal={setErrorModal} setCurrentPage={handlePageChange} handleLogout={handleLogout} />;
       default: return <HomePage setCurrentPage={handlePageChange} />;
     }
   };
