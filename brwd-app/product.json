@@ -27,20 +27,20 @@
     "fp7": { "id": "fp7", "name": "Strawberry Frappe", "price": 160, "category": "frappe", "image": "/image/Products/frappe/strawberry.png", "soldOut": false }
   },
   "icedcoffee": {
-    "ic1": { "id": "ic1", "name": "Iced Americano", "price": 90, "category": "icedcoffee", "image": "/image/products/icedcoffee/americano.png", "soldOut": false },
-    "ic2": { "id": "ic2", "name": "Iced Cafe` Latte", "price": 110, "category": "icedcoffee", "image": "/image/products/icedcoffee/cafelatte.png", "soldOut": false },
-    "ic3": { "id": "ic3", "name": "Iced Caramel Macchiato", "price": 125, "category": "icedcoffee", "image": "/image/products/icedcoffee/caramel.png", "soldOut": false },
-    "ic4": { "id": "ic4", "name": "Iced Coffe Matcha", "price": 130, "category": "icedcoffee", "image": "/image/products/icedcoffee/coffeematcha.png", "soldOut": false },
-    "ic5": { "id": "ic5", "name": "Iced Mocha", "price": 120, "category": "icedcoffee", "image": "/image/products/icedcoffee/mocha.png", "soldOut": false },
-    "ic6": { "id": "ic6", "name": "Iced Salted Caramel", "price": 130, "category": "icedcoffee", "image": "/image/products/icedcoffee/saltedcaramel.png", "soldOut": false },
-    "ic7": { "id": "ic7", "name": "Iced Vanilla", "price": 135, "category": "icedcoffee", "image": "/image/products/icedcoffee/vanilla.png", "soldOut": false }
+    "ic1": { "id": "ic1", "name": "Iced Americano", "price": 90, "category": "icedcoffee", "image": "/image/Products/icedcoffee/americano.png", "soldOut": false },
+    "ic2": { "id": "ic2", "name": "Iced Cafe` Latte", "price": 110, "category": "icedcoffee", "image": "/image/Products/icedcoffee/cafelatte.png", "soldOut": false },
+    "ic3": { "id": "ic3", "name": "Iced Caramel Macchiato", "price": 125, "category": "icedcoffee", "image": "/image/Products/icedcoffee/caramel.png", "soldOut": false },
+    "ic4": { "id": "ic4", "name": "Iced Coffe Matcha", "price": 130, "category": "icedcoffee", "image": "/image/Products/icedcoffee/coffeematcha.png", "soldOut": false },
+    "ic5": { "id": "ic5", "name": "Iced Mocha", "price": 120, "category": "icedcoffee", "image": "/image/Products/icedcoffee/mocha.png", "soldOut": false },
+    "ic6": { "id": "ic6", "name": "Iced Salted Caramel", "price": 130, "category": "icedcoffee", "image": "/image/Products/icedcoffee/saltedcaramel.png", "soldOut": false },
+    "ic7": { "id": "ic7", "name": "Iced Vanilla", "price": 135, "category": "icedcoffee", "image": "/image/Products/icedcoffee/vanilla.png", "soldOut": false }
   },
   "fruitmilk": {
-    "fm1": { "id": "fm1", "name": "Blueberry Fruit Milk", "price": 120, "category": "fruitmilk", "image": "/image/products/fruitmilk/blueberryfm.png", "soldOut": false },
-    "fm2": { "id": "fm2", "name": "Mango Fruit Milk", "price": 125, "category": "fruitmilk", "image": "/image/products/fruitmilk/mangofm.png", "soldOut": false },
-    "fm3": { "id": "fm3", "name": "Green Apple Fruit Milk", "price": 120, "category": "fruitmilk", "image": "/image/products/fruitmilk/gafm.png", "soldOut": false },
-    "fm4": { "id": "fm4", "name": "Kiwi Fruit Milk", "price": 130, "category": "fruitmilk", "image": "/image/products/fruitmilk/kiwifm.png", "soldOut": false },
-    "fm5": { "id": "fm5", "name": "Lychee Fruit Milk", "price": 130, "category": "fruitmilk", "image": "/image/products/fruitmilk/lycheefm.png", "soldOut": false },
-    "fm6": { "id": "fm6", "name": "Strawberry Fruit Milk", "price": 135, "category": "fruitmilk", "image": "/image/products/fruitmilk/strawberryfm.png", "soldOut": false }
+    "fm1": { "id": "fm1", "name": "Blueberry Fruit Milk", "price": 120, "category": "fruitmilk", "image": "/image/Products/fruitmilk/blueberryfm.png", "soldOut": false },
+    "fm2": { "id": "fm2", "name": "Mango Fruit Milk", "price": 125, "category": "fruitmilk", "image": "/image/Products/fruitmilk/mangofm.png", "soldOut": false },
+    "fm3": { "id": "fm3", "name": "Green Apple Fruit Milk", "price": 120, "category": "fruitmilk", "image": "/image/Products/fruitmilk/gafm.png", "soldOut": false },
+    "fm4": { "id": "fm4", "name": "Kiwi Fruit Milk", "price": 130, "category": "fruitmilk", "image": "/image/Products/fruitmilk/kiwifm.png", "soldOut": false },
+    "fm5": { "id": "fm5", "name": "Lychee Fruit Milk", "price": 130, "category": "fruitmilk", "image": "/image/Products/fruitmilk/lycheefm.png", "soldOut": false },
+    "fm6": { "id": "fm6", "name": "Strawberry Fruit Milk", "price": 135, "category": "fruitmilk", "image": "/image/Products/fruitmilk/strawberryfm.png", "soldOut": false }
   }
 }
