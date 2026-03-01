@@ -237,7 +237,7 @@ const App = () => {
       setIsAdmin(isAdminUser);
       setUser(cred.user);
       setCurrentPage(isAdminUser ? 'admin_orders' : 'menu');
-    } catch (error) { setErrorModal('Login failed: ' + error.message); }
+    } catch (error) { setErrorModal('Login failed: User not found / Credentials is wrong'); }
   };
 
   const handleGoogleLogin = async () => {
